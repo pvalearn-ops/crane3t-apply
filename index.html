@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>三噸以下起重機申請</title>
+  <link rel="stylesheet" href="荷重表/style.css?v=20261004z">
+  <link rel="stylesheet" href="hub/hub.css?v=20261004z">
+</head>
+<body>
+
+<header class="app-header no-print">
+  <div class="header-container">
+    <div class="brand">
+      <span class="icon">🏗️</span>
+      <div>
+        <h1>三公噸以下移動式起重機（搭乘設備）檢查申請</h1>
+        <p class="subtitle">安定度替代強度計算方案 ‧ 業者自主準備文件工具</p>
+      </div>
+    </div>
+    <div class="actions">
+      <span id="saveState" class="save-state"></span>
+      <button class="btn btn-outline" id="btnShowTerms">📜 責任說明</button>
+    </div>
+  </div>
+</header>
+
+<main class="main-wrapper" id="app"></main>
+
+<!-- 責任說明 -->
+<dialog id="termsModal" class="modal-dialog wide">
+  <div class="modal-content">
+    <h3>📜 使用前責任說明</h3>
+    <div class="modal-body terms">
+      <ol>
+        <li><b>工具性質：</b>本網頁為協助事業單位準備「三公噸以下移動式起重機＋搭乘設備」檢查申請文件之輔助工具。計算結果僅供申請參考，最終吊升荷重與荷重表以<b>檢查機構審查及現場檢查結果</b>為準。</li>
+        <li><b>適用範圍：</b>僅適用新納管之「移動式起重機＋搭乘設備」態樣，以安定度計算替代伸臂強度計算；近端作業之吊升荷重一律不得超過「(搭乘設備重量＋載重)×2」。若能檢附完整伸臂強度計算書，請依原有標準申請。</li>
+        <li><b>資料真實性：</b>所有填寫資料、量測數值、照片及上傳文件之真實性與正確性，由申請之事業單位<b>自行負完全責任</b>。偽造、變造、虛報（例如以 3 公噸以上機具冒充）者，除不予核准外，並依職業安全衛生法及刑法等相關規定處理。</li>
+        <li><b>推估數值：</b>伸臂重量、腳架重量等無法直接量測之參數係依經驗公式或原廠荷重表反算推估，可能與實際不同；如有原廠資料，應以原廠資料為準。</li>
+        <li><b>AI 解析：</b>AI 判讀可能出錯，解析結果<b>必須逐項人工核對</b>。使用 AI 自動解析時，所選文件影像會經由本系統的 Google Apps Script 服務傳送至 Google Gemini API 處理。不想上傳者可改用手動填寫或手動模式。</li>
+        <li><b>資料儲存：</b>所有資料僅儲存在<b>本機這個瀏覽器</b>內（輸入後即時自動儲存），不會上傳到本網站伺服器。清除瀏覽器資料、使用無痕視窗、更換電腦或瀏覽器，資料都會遺失，請定期匯出備份。</li>
+        <li class="risk"><b>⚠️ 匯出檔案風險：</b>匯出的備份檔（.json）包含公司名稱、統一編號、負責人、車籍資料、證件與機具照片等<b>個人資料及營業資料，且未加密</b>。
+          <ul>
+            <li>任何取得該檔案的人都能看到並匯入全部內容，請妥善保管，勿以公開或不安全的管道傳送、勿上傳到公開雲端。</li>
+            <li>檔案遺失、外流或遭第三人使用所生之損害，由匯出者自行負責。</li>
+            <li>匯入他人提供的檔案前請確認來源；系統<b>不驗證匯入內容之真偽</b>，匯入後須重新核對全部數據並對其內容負責。</li>
+            <li>移交輔導單位協助時，請只提供必要資料，並於完成後要求刪除。</li>
+          </ul>
+        </li>
+        <li><b>共用電腦：</b>在公用或共用電腦使用後，請刪除申請案。</li>
+      </ol>
+      <label class="agree-row"><input type="checkbox" id="chkAgree"> 我已閱讀並同意以上責任說明</label>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" id="btnTermsClose">關閉</button>
+      <button class="btn btn-primary" id="btnTermsAgree" disabled>同意並開始使用</button>
+    </div>
+  </div>
+</dialog>
+
+<!-- 照片標註 -->
+<dialog id="photoModal" class="modal-dialog photo-dialog">
+  <div class="photo-dialog-bar"><b id="photoModalTitle">照片標註</b><span class="hint">標註與數值會自動儲存</span>
+    <button class="btn btn-primary" onclick="document.getElementById('photoModal').close()">完成並關閉</button></div>
+  <iframe id="photoFrame" title="照片標註"></iframe>
+</dialog>
+
+<!-- 檔案預覽 -->
+<dialog id="previewModal" class="modal-dialog photo-dialog">
+  <div class="photo-dialog-bar"><b id="previewTitle"></b>
+    <button class="btn btn-outline" onclick="document.getElementById('previewModal').close()">關閉</button></div>
+  <div id="previewBody" class="preview-body"></div>
+</dialog>
+
+<!-- 匯出 -->
+<dialog id="exportModal" class="modal-dialog">
+  <div class="modal-content">
+    <h3>💾 匯出申請案備份</h3>
+    <div class="modal-body">
+      <div class="callout danger">匯出檔包含公司、負責人、車籍及照片等個資與營業資料，<b>未加密</b>。任何取得檔案者都能讀取與匯入。請妥善保管、勿以公開管道傳送；外流所生損害由匯出者自負（詳見責任說明第 7 點）。</div>
+      <label class="agree-row"><input type="checkbox" id="chkExportFiles" checked> 一併匯出上傳的文件與照片（檔案較大）</label>
+      <label class="agree-row"><input type="checkbox" id="chkExportRisk"> 我了解匯出檔案的風險</label>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" id="btnExportCancel">取消</button>
+      <button class="btn btn-primary" id="btnExportGo" disabled>下載備份檔</button>
+    </div>
+  </div>
+</dialog>
+
+<!-- 產出 PDF -->
+<dialog id="pdfModal" class="modal-dialog wide">
+  <div class="modal-content">
+    <h3>📑 產出完整申請資料 PDF</h3>
+    <div class="modal-body" id="pdfBody"></div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" id="btnPdfClose">關閉</button>
+      <button class="btn btn-secondary" id="btnPdfOpen" style="display:none">🖨️ 開啟預覽／列印</button>
+      <button class="btn btn-secondary" id="btnPdfSave" style="display:none">⬇️ 下載 PDF</button>
+      <button class="btn btn-primary" id="btnPdfGo">開始產出</button>
+    </div>
+  </div>
+</dialog>
+
+<input type="file" id="fileImportCase" accept=".json,application/json" hidden>
+
+<script src="hub/store.js?v=20261004z"></script>
+<script src="hub/calc.js?v=20261004z"></script>
+<script src="hub/ai.js?v=20261004z"></script>
+<script src="shared/tw-zip.js?v=20261004z"></script>
+<script src="shared/pdf-tools.js?v=20261004z"></script>
+<script src="hub/export-pdf.js?v=20261004z"></script>
+<script src="荷重性能表資料庫/crane-db.js?v=20261004z"></script>
+<script src="hub/app.js?v=20261004z"></script>
+</body>
+</html>

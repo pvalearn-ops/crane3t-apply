@@ -1,0 +1,697 @@
+/* ============================================================
+   起重機額定荷重表樣式表 (Screen & Print CSS)
+   ============================================================ */
+
+:root {
+  --primary-color: #1e40af;
+  --primary-hover: #1d4ed8;
+  --secondary-color: #0f766e;
+  --secondary-hover: #115e59;
+  --danger-color: #dc2626;
+  --danger-hover: #b91c1c;
+  --bg-color: #f1f5f9;
+  --panel-bg: #ffffff;
+  --border-color: #000000;
+  --light-border: #cbd5e1;
+  --text-color: #0f172a;
+  --cell-font-size: 15px;
+  --header-font-size: 16px;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang TC", "Microsoft JhengHei", "微軟正黑體", sans-serif;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  line-height: 1.4;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* 頂部 Header */
+.app-header {
+  background: #ffffff;
+  border-bottom: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+.header-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 12px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.brand .icon {
+  font-size: 2rem;
+}
+
+.brand h1 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.brand .subtitle {
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+/* 主容器配置 */
+.main-wrapper {
+  max-width: 1200px;
+  margin: 20px auto;
+  padding: 0 20px 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* 控制面板 */
+.control-panel {
+  background: var(--panel-bg);
+  border-radius: 10px;
+  padding: 18px 24px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e2e8f0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 18px;
+}
+
+.control-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.group-title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #334155;
+}
+
+.btn-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.quick-tips {
+  grid-column: 1 / -1;
+  background: #f8fafc;
+  padding: 12px 16px;
+  border-radius: 8px;
+  border-left: 4px solid var(--primary-color);
+}
+
+.tips-list {
+  font-size: 0.85rem;
+  color: #475569;
+  padding-left: 20px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 6px;
+}
+
+/* 按鈕風格 */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 14px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+  border: 1px solid transparent;
+  user-select: none;
+}
+
+.btn-primary {
+  background: var(--primary-color);
+  color: #ffffff;
+}
+.btn-primary:hover {
+  background: var(--primary-hover);
+}
+
+.btn-secondary {
+  background: #0284c7;
+  color: #ffffff;
+}
+.btn-secondary:hover {
+  background: #0369a1;
+}
+
+.btn-outline {
+  background: #ffffff;
+  border-color: #cbd5e1;
+  color: #334155;
+}
+.btn-outline:hover {
+  background: #f8fafc;
+  border-color: #94a3b8;
+}
+
+.btn-danger-outline {
+  background: #ffffff;
+  border-color: #fca5a5;
+  color: var(--danger-color);
+}
+.btn-danger-outline:hover {
+  background: #fee2e2;
+  border-color: var(--danger-color);
+}
+
+.file-btn {
+  cursor: pointer;
+}
+
+/* 紙張容器（模擬列印預覽紙張） */
+.paper-container {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  overflow-x: auto;
+  padding: 10px 0;
+}
+
+.printable-sheet {
+  background: #ffffff;
+  width: 100%;
+  max-width: 960px;
+  min-height: 1000px;
+  padding: 30px 40px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 表格標題區 */
+.sheet-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 8px;
+  padding-bottom: 4px;
+}
+
+.model-title-box {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+}
+
+.model-input {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: #000;
+  border: 1px dashed transparent;
+  border-radius: 4px;
+  padding: 2px 6px;
+  width: 260px;
+  font-family: inherit;
+}
+
+.table-title-input {
+  font-size: 1.7rem;
+  font-weight: 800;
+  color: #000;
+  border: 1px dashed transparent;
+  border-radius: 4px;
+  padding: 2px 6px;
+  width: 280px;
+  font-family: inherit;
+}
+
+.unit-box {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #000;
+}
+
+.editable-unit {
+  font-size: 1.15rem;
+  font-weight: 700;
+  width: 60px;
+  border: 1px dashed transparent;
+  border-radius: 4px;
+  padding: 2px 4px;
+}
+
+/* 核心表格樣式 (完全比照截圖黑色實線工程圖表) */
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.load-table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 2px solid #000000;
+  table-layout: fixed;
+  background-color: #ffffff;
+}
+
+.load-table th, 
+.load-table td {
+  border: 1.5px solid #000000;
+  text-align: center;
+  vertical-align: middle;
+  padding: 0;
+  height: 38px;
+  position: relative;
+  font-size: var(--cell-font-size);
+  color: #000000;
+}
+
+/* 斜切角表頭 (左上角) */
+.corner-header-cell {
+  width: 150px;
+  min-width: 140px;
+  height: 76px;
+  padding: 0 !important;
+  background-color: #ffffff;
+  position: relative;
+}
+
+.diagonal-split {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 72px;
+}
+
+.diagonal-split .top-text {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.diagonal-split .bottom-text {
+  position: absolute;
+  bottom: 6px;
+  left: 8px;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.diagonal-split .split-line {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  background: linear-gradient(to top right, transparent calc(50% - 0.75px), #000000 calc(50% - 0.75px), #000000 calc(50% + 0.75px), transparent calc(50% + 0.75px));
+}
+
+/* 吊桿長度主標題 */
+.boom-super-header {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  height: 36px;
+  background-color: #ffffff;
+}
+
+/* 欄位操作列與數值列 */
+.boom-th {
+  position: relative;
+  font-weight: bold;
+}
+
+.radius-th {
+  font-weight: bold;
+  position: relative;
+}
+
+/* 鋼索掛數列 */
+.rope-title-cell {
+  font-weight: 800;
+  font-size: 15px;
+}
+
+/* 儲存格與輸入框互動 */
+.cell-input {
+  width: 100%;
+  height: 100%;
+  min-height: 36px;
+  border: none;
+  outline: none;
+  background: transparent;
+  text-align: center;
+  font-size: inherit;
+  font-family: inherit;
+  color: #000000;
+  padding: 2px 4px;
+  resize: none;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 支援換行副文字 (例如: 2240 / (4.57m)) */
+.load-cell-content {
+  width: 100%;
+  min-height: 34px;
+  outline: none;
+  padding: 3px 2px;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.25;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  white-space: pre-line;
+  word-break: break-all;
+}
+
+.text-bold {
+  font-weight: 700;
+}
+
+/* 懸浮格編輯框樣式 */
+.editable-title:focus,
+.editable-unit:focus,
+.editable-notes:focus,
+.cell-input:focus,
+.load-cell-content:focus {
+  background-color: #f0f9ff !important;
+  box-shadow: inset 0 0 0 1.5px #0284c7;
+}
+
+.editable-title:hover,
+.editable-unit:hover,
+.editable-notes:hover {
+  border-color: #94a3b8;
+}
+
+/* 斜線格（無效/超出作業範圍） */
+.diagonal-slash-cell {
+  background: linear-gradient(to top right, transparent calc(50% - 0.75px), #000000 calc(50% - 0.75px), #000000 calc(50% + 0.75px), transparent calc(50% + 0.75px)) !important;
+  color: transparent !important;
+}
+
+.diagonal-slash-cell .load-cell-content {
+  color: transparent;
+  user-select: none;
+}
+
+/* 格子快捷工具按鈕（螢幕顯示，列印時隱藏） */
+.cell-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cell-actions {
+  position: absolute;
+  top: 1px;
+  right: 1px;
+  display: none;
+  z-index: 10;
+}
+
+.cell-wrapper:hover .cell-actions {
+  display: flex;
+  gap: 2px;
+}
+
+.btn-mini-slash {
+  background: #3b82f6;
+  color: #ffffff;
+  border: none;
+  border-radius: 3px;
+  font-size: 10px;
+  padding: 1px 4px;
+  cursor: pointer;
+  opacity: 0.85;
+}
+
+.btn-mini-slash:hover {
+  opacity: 1;
+  background: #1d4ed8;
+}
+
+/* 欄列單獨刪除按鈕 */
+.th-del-btn {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  display: none;
+  background: #ef4444;
+  color: #ffffff;
+  border: none;
+  border-radius: 50%;
+  width: 16px;
+  height: 16px;
+  font-size: 10px;
+  line-height: 14px;
+  cursor: pointer;
+}
+
+.boom-th:hover .th-del-btn,
+.radius-th:hover .th-del-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 底部注意事項 */
+.sheet-footer {
+  margin-top: 10px;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #000000;
+}
+
+.notes-container {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.note-label {
+  white-space: nowrap;
+}
+
+.editable-notes {
+  width: 100%;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #000000;
+  border: 1px dashed transparent;
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-family: inherit;
+}
+
+/* 對話框 Modal */
+.modal-dialog {
+  border: none;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+  margin: auto;
+  max-width: 420px;
+  width: 90%;
+}
+
+.modal-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(2px);
+}
+
+.modal-content h3 {
+  margin-bottom: 16px;
+  font-size: 1.15rem;
+  color: #0f172a;
+}
+
+.modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.form-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.form-row label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #475569;
+}
+
+.form-row input {
+  padding: 8px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font-size: 0.95rem;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+/* ============================================================
+   @media print (列印與另存 PDF 專用高精準度樣式)
+   ============================================================ */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 10mm 8mm 10mm 8mm;
+  }
+
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    font-size: 12pt;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* 隱藏不需要列印的元素 */
+  .no-print,
+  .cell-actions,
+  .th-del-btn,
+  .modal-dialog {
+    display: none !important;
+  }
+
+  .main-wrapper {
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .paper-container {
+    padding: 0 !important;
+    overflow: visible !important;
+  }
+
+  .printable-sheet {
+    box-shadow: none !important;
+    border: none !important;
+    padding: 0 !important;
+    max-width: 100% !important;
+    min-height: auto !important;
+    width: 100% !important;
+  }
+
+  .sheet-header {
+    margin-bottom: 4mm;
+  }
+
+  .model-input,
+  .table-title-input {
+    font-size: 18pt !important;
+    font-weight: 800 !important;
+    border: none !important;
+  }
+
+  .editable-unit,
+  .unit-box {
+    font-size: 13pt !important;
+    border: none !important;
+  }
+
+  .load-table {
+    width: 100% !important;
+    border: 2pt solid #000000 !important;
+    page-break-inside: avoid;
+  }
+
+  .load-table th,
+  .load-table td {
+    border: 1pt solid #000000 !important;
+    padding: 1px 0 !important;
+    height: 7.2mm !important;
+    font-size: 10.5pt !important;
+    color: #000000 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .corner-header-cell {
+    height: 14mm !important;
+  }
+
+  .diagonal-split .top-text,
+  .diagonal-split .bottom-text {
+    font-size: 10pt !important;
+    font-weight: bold !important;
+  }
+
+  .boom-super-header {
+    font-size: 13pt !important;
+    font-weight: bold !important;
+    height: 7.5mm !important;
+  }
+
+  .diagonal-slash-cell {
+    background: linear-gradient(to top right, transparent calc(50% - 0.75pt), #000000 calc(50% - 0.75pt), #000000 calc(50% + 0.75pt), transparent calc(50% + 0.75pt)) !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .load-cell-content {
+    font-size: 10pt !important;
+    line-height: 1.15 !important;
+    color: #000000 !important;
+  }
+
+  .sheet-footer {
+    margin-top: 3mm !important;
+    font-size: 9.5pt !important;
+  }
+
+  .editable-notes {
+    font-size: 9.5pt !important;
+    border: none !important;
+  }
+}
+
+/* 受限制區與未受限制區之分隔粗線 */
+.load-table td.cap-b { border-bottom: 3px solid #000 !important; }
+.load-table td.cap-r { border-right: 3px solid #000 !important; }

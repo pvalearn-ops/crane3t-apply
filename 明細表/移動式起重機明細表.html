@@ -1,0 +1,1178 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <script src="../shared/case-bridge.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>移動式起重機明細表</title>
+<style>
+  :root {
+    --primary-color: #1a4fa0;
+    --primary-dark: #0f3570;
+    --primary-light: #e9eef7;
+    --text-color: #111;
+    --border-color: #000;
+    --bg-page: #eaecf0;
+    --card-bg: #ffffff;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: "Microsoft JhengHei", "PingFang TC", "Noto Sans TC", "PMingLiU", sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: var(--bg-page);
+    color: var(--text-color);
+    font-size: 12px;
+    line-height: 1.35;
+  }
+
+  /* ===== 頂部操作工具列 ===== */
+  .toolbar {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    background: linear-gradient(135deg, #1a4fa0, #0d2b5c);
+    color: #fff;
+    padding: 9px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.25);
+  }
+
+  .toolbar-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 15px;
+    font-weight: bold;
+    letter-spacing: 1px;
+  }
+
+  .toolbar-badge {
+    background: rgba(255,255,255,0.2);
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-weight: normal;
+  }
+
+  .toolbar-buttons {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: #ffffff;
+    color: var(--primary-color);
+    border: none;
+    border-radius: 4px;
+    padding: 5px 11px;
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: inherit;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+  }
+
+  .btn:hover {
+    background: #dbe6fb;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  }
+
+  .btn:active {
+    transform: translateY(0);
+  }
+
+  .btn-primary {
+    background: #ffcc00;
+    color: #3e2e00;
+  }
+  .btn-primary:hover {
+    background: #ffdb4d;
+  }
+
+  .btn-success {
+    background: #4caf50;
+    color: #ffffff;
+  }
+  .btn-success:hover {
+    background: #5cbf60;
+  }
+
+  .btn-danger {
+    background: #f44336;
+    color: #ffffff;
+  }
+  .btn-danger:hover {
+    background: #e57373;
+  }
+
+  .status-toast {
+    font-size: 12px;
+    color: #a3e635;
+    margin-left: 6px;
+    transition: opacity 0.3s;
+  }
+
+  /* ===== 主容器 ===== */
+  .container {
+    max-width: 960px;
+    margin: 16px auto;
+    padding: 0 12px 30px;
+  }
+
+  .notice-banner {
+    background: #fff8e1;
+    border-left: 4px solid #ffb300;
+    padding: 7px 12px;
+    margin-bottom: 12px;
+    border-radius: 4px;
+    font-size: 11.5px;
+    color: #6a4a00;
+  }
+
+  /* ===== 表單頁面 ===== */
+  .form-page {
+    background: #ffffff;
+    padding: 18px 24px 16px;
+    box-shadow: 0 3px 12px rgba(0,0,0,0.1);
+    border-radius: 4px;
+    box-sizing: border-box;
+    width: 100%;
+    margin: 0 auto;
+  }
+
+  /* 標題 */
+  .doc-header {
+    text-align: center;
+    margin-bottom: 8px;
+  }
+
+  .doc-title {
+    font-size: 21px;
+    font-weight: bold;
+    letter-spacing: 6px;
+    margin: 0 0 2px 0;
+    color: #000;
+  }
+
+  /* ===== 表格通用樣式 ===== */
+  table.sheet-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: -1px; /* 消除表格相連處的雙重框線 */
+    border: 1.5px solid #000;
+    table-layout: fixed;
+  }
+
+  table.sheet-table th,
+  table.sheet-table td {
+    border: 1px solid #000;
+    padding: 2px 4px;
+    font-size: 11.5px;
+    vertical-align: middle;
+    line-height: 1.25;
+    height: 25px;
+  }
+
+  .th-label {
+    background-color: #f7f9fc;
+    font-weight: 600;
+    text-align: center;
+    color: #000;
+    white-space: nowrap;
+  }
+
+  .th-inline-lbl {
+    font-weight: 600;
+    color: #000;
+    white-space: nowrap;
+    margin-right: 1px;
+    flex-shrink: 0;
+  }
+
+  .v-header {
+    width: 24px !important;
+    text-align: center;
+    font-weight: bold;
+    background-color: #f7f9fc;
+    line-height: 1.2;
+    padding: 4px 2px;
+    letter-spacing: 1.5px;
+    word-break: break-all;
+    white-space: normal;
+  }
+
+  /* ===== 單行彈性排列容器 ===== */
+  .cell-flex {
+    display: flex;
+    align-items: center;
+    flex-wrap: nowrap;
+    white-space: nowrap;
+    width: 100%;
+    gap: 3px;
+  }
+
+  .cell-flex span {
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .center-flex {
+    justify-content: center;
+  }
+
+  .space-between-flex {
+    justify-content: space-between;
+  }
+
+  /* ===== 表單輸入框 ===== */
+  input[type="text"],
+  input[type="number"],
+  select {
+    width: 100%;
+    border: 1px solid transparent;
+    background: transparent;
+    padding: 1px 3px;
+    font-size: 11.5px;
+    font-family: inherit;
+    color: #002266;
+    font-weight: 500;
+    outline: none;
+    box-sizing: border-box;
+    border-radius: 2px;
+    height: 22px;
+  }
+
+  input[type="text"]:hover,
+  input[type="number"]:hover,
+  select:hover {
+    border-color: #b0c4de;
+    background-color: #fbfdff;
+  }
+
+  input[type="text"]:focus,
+  input[type="number"]:focus,
+  select:focus {
+    border-color: #1a4fa0;
+    background-color: #f0f6ff;
+    box-shadow: 0 0 0 2px rgba(26,79,160,0.15);
+  }
+
+  .center-input {
+    text-align: center;
+  }
+
+  /* 填空式彈性底線輸入框（保證不換行） */
+  .inline-input-flex {
+    flex: 1;
+    min-width: 25px;
+    border: none !important;
+    border-bottom: 1px solid #666 !important;
+    border-radius: 0 !important;
+    padding: 0 2px !important;
+    text-align: center;
+    height: 20px !important;
+    background: transparent;
+    color: #002266;
+  }
+
+  .inline-input-flex:focus {
+    border-bottom: 1.5px solid #1a4fa0 !important;
+    background-color: #f0f6ff !important;
+    box-shadow: none !important;
+  }
+
+  textarea.form-textarea {
+    width: 100%;
+    border: 1px solid transparent;
+    background: transparent;
+    padding: 3px 4px;
+    font-family: inherit;
+    font-size: 11.5px;
+    color: #002266;
+    outline: none;
+    resize: none;
+    box-sizing: border-box;
+    border-radius: 2px;
+    line-height: 1.35;
+  }
+
+  textarea.form-textarea:hover {
+    border-color: #b0c4de;
+    background-color: #fbfdff;
+  }
+
+  textarea.form-textarea:focus {
+    border-color: #1a4fa0;
+    background-color: #f0f6ff;
+    box-shadow: 0 0 0 2px rgba(26,79,160,0.15);
+  }
+
+  /* ===== 核選/單選元件 ===== */
+  .checkbox-group {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+  }
+
+  .chk-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    cursor: pointer;
+    font-size: 11.5px;
+    user-select: none;
+    white-space: nowrap;
+  }
+
+  .chk-label input[type="radio"],
+  .chk-label input[type="checkbox"] {
+    cursor: pointer;
+    margin: 0;
+    accent-color: #1a4fa0;
+  }
+
+  /* 戳記與審核格 */
+  /* 檢查合格戳記：左側窄標題＋右側接近正方形的蓋章格（圓形戳記） */
+  td.stamp-cell { padding: 0 !important; vertical-align: top; }
+  .stamp-wrap { display: flex; min-height: 190px; height: 100%; }
+  .stamp-label { width: 24px; flex: 0 0 24px; display: flex; align-items: center; justify-content: center; text-align: center; line-height: 1.25; font-weight: 600; font-size: 11px; background-color: #f7f9fc; border-right: 1px solid #000; }
+  .stamp-square { flex: 1; }
+  td.stamp-head { text-align: center; font-weight: 600; height: 22px; }
+  td.stamp-blank { background: #fff; }
+  tr.grow > td { height: 60px; }
+  .stamp-box {
+    height: 120px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #888;
+    font-size: 11px;
+    border: 1px dashed #aaa;
+    border-radius: 4px;
+    margin: 2px 0;
+    padding: 4px;
+    background: #fafafa;
+  }
+
+  /* ===== 頁尾備註與表單編號 ===== */
+  .footer-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-top: 5px;
+    font-size: 10.5px;
+    color: #222;
+  }
+
+  .footer-note {
+    line-height: 1.35;
+  }
+
+  .footer-code {
+    text-align: right;
+    font-weight: 500;
+    white-space: nowrap;
+    padding-left: 10px;
+  }
+
+  /* ===== A4 版面（預覽與列印一致） ===== */
+  @page {
+    size: A4 portrait;
+    margin: 0;
+  }
+
+  body.preview-mode {
+    background: #4a5568;
+    padding-bottom: 50px;
+  }
+  body.preview-mode .container {
+    max-width: calc(210mm + 24px);
+  }
+  body.preview-mode .form-page {
+    box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+    background: #fff;
+    width: 210mm;
+    height: 297mm;
+    padding: 8mm 9mm 6mm 9mm;
+    overflow: hidden;
+  }
+
+  @media print {
+    * {
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+    html, body { background: #ffffff !important; margin: 0 !important; padding: 0 !important; }
+    .toolbar, .no-print, .notice-banner { display: none !important; }
+    .container { max-width: none !important; margin: 0 !important; padding: 0 !important; }
+    .form-page, body.preview-mode .form-page {
+      box-shadow: none !important;
+      margin: 0 !important;
+      width: 210mm !important;
+      height: 296mm !important;
+      padding: 8mm 9mm 6mm 9mm !important;
+      overflow: hidden !important;
+      page-break-after: avoid;
+    }
+    table.sheet-table { page-break-inside: avoid; }
+    input[type="text"], input[type="number"], select, textarea {
+      border-color: transparent !important;
+      background: transparent !important;
+      box-shadow: none !important;
+      color: #000 !important;
+    }
+    .inline-input-flex { border-bottom: 1px solid #666 !important; }
+    ::placeholder { color: transparent !important; }
+  }
+</style>
+</head>
+<body class="preview-mode">
+
+<!-- 頂部操作工具列 -->
+<div class="toolbar no-print">
+  <div class="toolbar-title">
+    <span>🏗️ 移動式起重機明細表</span>
+    <span class="toolbar-badge">危險性機械申請規格</span>
+    <span id="saveStatus" class="status-toast"></span>
+  </div>
+  <div class="toolbar-buttons">
+    <button type="button" class="btn" id="btnUndo" onclick="undoSpec()" disabled title="復原最近一次修改（最多 10 次）">↶ 上一步 <span id="undoCount"></span></button>
+    <button type="button" class="btn btn-success" onclick="fillSampleData()">📝 帶入範例資料</button>
+    <button type="button" class="btn" onclick="exportJSON()">📤 匯出 JSON</button>
+    <button type="button" class="btn" onclick="document.getElementById('importFile').click()">📥 匯入 JSON</button>
+    <input type="file" id="importFile" style="display:none" accept=".json" onchange="importJSON(event)">
+    <button type="button" class="btn btn-danger" onclick="resetForm()">🧹 清空重填</button>
+  </div>
+</div>
+
+<div class="container">
+  <div class="notice-banner no-print">
+    <span>💡 本頁以 A4 實際大小顯示，列印即為此版面。「帶入範例資料」只會填入<strong>空白欄位</strong>，不會覆蓋事業單位資料與已填內容；可用「上一步」復原。</span>
+  </div>
+
+  <form id="craneForm" class="form-page">
+    <!-- 文件標題 -->
+    <div class="doc-header">
+      <h1 class="doc-title">移動式起重機明細表</h1>
+    </div>
+
+    <!-- 表格一：基本資料 -->
+    <table class="sheet-table">
+      <colgroup>
+        <col style="width: 14%;">
+        <col style="width: 36%;">
+        <col style="width: 14%;">
+        <col style="width: 36%;">
+      </colgroup>
+      <tbody>
+        <tr>
+          <td class="th-label">事業單位名稱</td>
+          <td><input type="text" name="company_name" placeholder="請輸入事業單位名稱"></td>
+          <td class="th-label">編　　號</td>
+          <td><input type="text" name="crane_serial_no" placeholder="如：CR-01"></td>
+        </tr>
+        <tr>
+          <td class="th-label">事業單位地址</td>
+          <td><input type="text" name="company_address" placeholder="請輸入事業單位地址"></td>
+          <td class="th-label">行 業 別</td>
+          <td><input type="text" name="industry_type" placeholder="如：營造業、製造業"></td>
+        </tr>
+        <tr>
+          <td class="th-label">設 置 地 址</td>
+          <td><input type="text" name="install_address" placeholder="請輸入設置地址（車籍或廠址）"></td>
+          <td class="th-label">負 責 人</td>
+          <td><input type="text" name="owner_name" placeholder="請輸入負責人姓名"></td>
+        </tr>
+        <tr>
+          <td class="th-label">種類及型式</td>
+          <td><input type="text" name="crane_model_type" placeholder="如：積載型移動式起重機 (油壓伸縮臂)"></td>
+          <td class="th-label">事業單位電話</td>
+          <td><input type="text" name="company_tel" placeholder="如：(02) 2345-6789"></td>
+        </tr>
+        <tr>
+          <td class="th-label">吊 升 荷 重</td>
+          <td>
+            <div class="cell-flex">
+              <input type="number" step="0.01" name="lifting_capacity" class="inline-input-flex" style="max-width:80px;" placeholder="2.93">
+              <span>公噸</span>
+            </div>
+          </td>
+          <td class="th-label">連 絡 電 話</td>
+          <td><input type="text" name="contact_tel" placeholder="如：0912-345-678"></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- 表格二：詳細規格與構造性能 -->
+    <table class="sheet-table">
+      <colgroup>
+        <col style="width: 24px;"> <!-- 縱向標題 -->
+        <col style="width: 90px;"> <!-- 項目子標題 -->
+        <!-- 9個性能數值欄位 -->
+        <col style="width: calc((100% - 114px) / 9);">
+        <col style="width: calc((100% - 114px) / 9);">
+        <col style="width: calc((100% - 114px) / 9);">
+        <col style="width: calc((100% - 114px) / 9);">
+        <col style="width: calc((100% - 114px) / 9);">
+        <col style="width: calc((100% - 114px) / 9);">
+        <col style="width: calc((100% - 114px) / 9);">
+        <col style="width: calc((100% - 114px) / 9);">
+        <col style="width: calc((100% - 114px) / 9);">
+      </colgroup>
+      <tbody>
+        <!-- 荷重性能 (3列) -->
+        <tr>
+          <td rowspan="3" class="v-header">荷重性能</td>
+          <td class="th-label" style="text-align:left; padding-left:5px;">伸臂長度(m)</td>
+          <td><input type="number" step="0.01" name="boom_len_1" class="center-input"></td>
+          <td><input type="number" step="0.01" name="boom_len_2" class="center-input"></td>
+          <td><input type="number" step="0.01" name="boom_len_3" class="center-input"></td>
+          <td><input type="number" step="0.01" name="boom_len_4" class="center-input"></td>
+          <td><input type="number" step="0.01" name="boom_len_5" class="center-input"></td>
+          <td><input type="number" step="0.01" name="boom_len_6" class="center-input"></td>
+          <td><input type="number" step="0.01" name="boom_len_7" class="center-input"></td>
+          <td><input type="number" step="0.01" name="boom_len_8" class="center-input"></td>
+          <td><input type="number" step="0.01" name="boom_len_9" class="center-input"></td>
+        </tr>
+        <tr>
+          <td class="th-label" style="text-align:left; padding-left:5px;">作業半徑(m)</td>
+          <td><input type="number" step="0.01" name="radius_1" class="center-input"></td>
+          <td><input type="number" step="0.01" name="radius_2" class="center-input"></td>
+          <td><input type="number" step="0.01" name="radius_3" class="center-input"></td>
+          <td><input type="number" step="0.01" name="radius_4" class="center-input"></td>
+          <td><input type="number" step="0.01" name="radius_5" class="center-input"></td>
+          <td><input type="number" step="0.01" name="radius_6" class="center-input"></td>
+          <td><input type="number" step="0.01" name="radius_7" class="center-input"></td>
+          <td><input type="number" step="0.01" name="radius_8" class="center-input"></td>
+          <td><input type="number" step="0.01" name="radius_9" class="center-input"></td>
+        </tr>
+        <tr>
+          <td class="th-label" style="text-align:left; padding-left:5px;">額定荷重(t)</td>
+          <td><input type="number" step="0.01" name="load_1" class="center-input"></td>
+          <td><input type="number" step="0.01" name="load_2" class="center-input"></td>
+          <td><input type="number" step="0.01" name="load_3" class="center-input"></td>
+          <td><input type="number" step="0.01" name="load_4" class="center-input"></td>
+          <td><input type="number" step="0.01" name="load_5" class="center-input"></td>
+          <td><input type="number" step="0.01" name="load_6" class="center-input"></td>
+          <td><input type="number" step="0.01" name="load_7" class="center-input"></td>
+          <td><input type="number" step="0.01" name="load_8" class="center-input"></td>
+          <td><input type="number" step="0.01" name="load_9" class="center-input"></td>
+        </tr>
+
+        <!-- 額定速率 (2列，維持原稿分欄) -->
+        <tr style="height:15px;">
+          <td rowspan="2" class="v-header">額定速率</td>
+          <td colspan="2" class="th-label" style="height:15px; padding:1px;">捲　　揚</td>
+          <td colspan="2" class="th-label" style="height:15px; padding:1px;">起　　伏</td>
+          <td colspan="3" class="th-label" style="height:15px; padding:1px;">走　　行</td>
+          <td colspan="3" class="th-label" style="height:15px; padding:1px;">旋　　轉</td>
+        </tr>
+        <tr style="height:18px;">
+          <td colspan="2" style="height:18px; padding:1px 2px;">
+            <div class="cell-flex center-flex">
+              <input type="number" step="0.1" name="speed_hoist" class="inline-input-flex" style="max-width:55px;">
+              <span>m/min</span>
+            </div>
+          </td>
+          <td colspan="2" style="height:18px; padding:1px 2px;">
+            <div class="cell-flex center-flex">
+              <input type="text" name="speed_luff" class="inline-input-flex" placeholder="例：1~78/7sec">
+            </div>
+          </td>
+          <td colspan="3" style="height:18px; padding:1px 2px;">
+            <div class="cell-flex center-flex">
+              <input type="number" step="0.1" name="speed_travel" class="inline-input-flex" style="max-width:55px;">
+              <span>km/h</span>
+            </div>
+          </td>
+          <td colspan="3" style="height:18px; padding:1px 2px;">
+            <div class="cell-flex center-flex">
+              <input type="number" step="0.1" name="speed_slew" class="inline-input-flex" style="max-width:50px;">
+              <span>rpm</span>
+            </div>
+          </td>
+        </tr>
+
+        <!-- 結構 (5列) -->
+        <tr>
+          <td rowspan="5" class="v-header">結　構</td>
+          <td class="th-label" style="text-align:left; padding-left:5px;">伸臂最大長度</td>
+          <td colspan="3">
+            <div class="cell-flex">
+              <input type="number" step="0.01" name="max_boom_length" class="inline-input-flex">
+              <span>ｍ</span>
+            </div>
+          </td>
+          <td rowspan="3" class="th-label" style="width:34px; padding:2px; writing-mode:vertical-lr; letter-spacing:1px; text-align:center; line-height:1.2;">伸臂使用<br>範　圍</td>
+          <td colspan="2" class="th-label">傾斜角範圍</td>
+          <td colspan="3">
+            <div class="cell-flex center-flex">
+              <input type="number" step="0.1" name="boom_angle_min" class="inline-input-flex" style="max-width:38px;">
+              <span>度～</span>
+              <input type="number" step="0.1" name="boom_angle_max" class="inline-input-flex" style="max-width:38px;">
+              <span>度</span>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td rowspan="3" class="th-label" style="text-align:left; padding-left:5px; line-height:1.15;">輔助伸臂長度<br>及數目</td>
+          <td colspan="3">
+            <div class="cell-flex">
+              <input type="number" step="0.01" name="aux_boom_len_1" class="inline-input-flex" style="max-width:45px;">
+              <span>ｍ</span>
+              <input type="number" step="1" name="aux_boom_cnt_1" class="inline-input-flex" style="max-width:35px;">
+              <span>支</span>
+            </div>
+          </td>
+          <td colspan="2" class="th-label">旋轉限度</td>
+          <td colspan="3">
+            <div class="cell-flex center-flex">
+              <input type="number" step="1" name="rotation_limit" class="inline-input-flex" style="max-width:55px;">
+              <span>度</span>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td colspan="3">
+            <div class="cell-flex">
+              <input type="number" step="0.01" name="aux_boom_len_2" class="inline-input-flex" style="max-width:45px;">
+              <span>ｍ</span>
+              <input type="number" step="1" name="aux_boom_cnt_2" class="inline-input-flex" style="max-width:35px;">
+              <span>支</span>
+            </div>
+          </td>
+          <td colspan="2" class="th-label">最大作業半徑</td>
+          <td colspan="3">
+            <div class="cell-flex center-flex">
+              <input type="number" step="0.01" name="max_working_radius" class="inline-input-flex" style="max-width:55px;">
+              <span>ｍ</span>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td colspan="3">
+            <div class="cell-flex">
+              <input type="number" step="0.01" name="aux_boom_len_3" class="inline-input-flex" style="max-width:45px;">
+              <span>ｍ</span>
+              <input type="number" step="1" name="aux_boom_cnt_3" class="inline-input-flex" style="max-width:35px;">
+              <span>支</span>
+            </div>
+          </td>
+          <td colspan="3" class="th-label">外伸撐座</td>
+          <td colspan="3">
+            <div class="checkbox-group center-flex">
+              <label class="chk-label"><input type="radio" name="outrigger" value="有"> 有</label>
+              <label class="chk-label"><input type="radio" name="outrigger" value="無"> 無</label>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="th-label" style="text-align:left; padding-left:5px;">台　　車</td>
+          <td colspan="3"><input type="text" name="carrier_info" placeholder="如：專用底盤 / 卡車底盤"></td>
+          <td colspan="3" class="th-label">走行裝置</td>
+          <td colspan="3"><input type="text" name="travel_device" placeholder="如：輪胎式 / 履帶式"></td>
+        </tr>
+
+        <!-- 原動機 (1列) -->
+        <tr>
+          <td class="v-header">原動機</td>
+          <td colspan="5">
+            <div class="cell-flex">
+              <span>用途：</span>
+              <input type="text" name="engine_purpose" class="inline-input-flex" placeholder="走行兼起重用">
+              <span style="margin-left:6px;">種類：</span>
+              <input type="text" name="engine_type" class="inline-input-flex" placeholder="柴油引擎 / 電動">
+            </div>
+          </td>
+          <td colspan="5">
+            <div class="cell-flex">
+              <span>額定輸出：</span>
+              <input type="text" name="engine_power" class="inline-input-flex" placeholder="如：2999 cc 或 150 PS">
+            </div>
+          </td>
+        </tr>
+
+        <!-- 鋼索及吊鏈 (3列，維持原稿分欄) -->
+        <tr style="height:19px;">
+          <td rowspan="3" class="v-header">鋼　索<br>及吊鏈</td>
+          <td colspan="5" style="padding:1px 3px;">
+            <div class="cell-flex">
+              <span>主　捲：構成</span>
+              <input type="text" name="main_wire_struct" class="inline-input-flex" placeholder="6×Fi(29)">
+              <span style="margin-left:4px;">直徑</span>
+              <input type="number" step="0.1" name="main_wire_dia" class="inline-input-flex" style="max-width:45px;">
+              <span>mm</span>
+            </div>
+          </td>
+          <td colspan="5" style="padding:1px 3px;">
+            <div class="cell-flex">
+              <span>輔　捲：構成</span>
+              <input type="text" name="aux_wire_struct" class="inline-input-flex" placeholder="6×Fi(29)">
+              <span style="margin-left:4px;">節徑</span>
+              <input type="number" step="0.1" name="aux_wire_dia" class="inline-input-flex" style="max-width:45px;">
+              <span>mm</span>
+            </div>
+          </td>
+        </tr>
+        <tr style="height:19px;">
+          <td colspan="5" style="padding:1px 3px;">
+            <div class="cell-flex">
+              <span>起伏用：構成</span>
+              <input type="text" name="luff_wire_struct" class="inline-input-flex" placeholder="油壓缸起伏 / 鋼索構成">
+              <span style="margin-left:4px;">直徑</span>
+              <input type="number" step="0.1" name="luff_wire_dia" class="inline-input-flex" style="max-width:45px;">
+              <span>mm</span>
+            </div>
+          </td>
+          <td colspan="5" style="padding:1px 3px;">
+            <div class="cell-flex">
+              <span>支持用：構成</span>
+              <input type="text" name="support_wire_struct" class="inline-input-flex">
+              <span style="margin-left:4px;">節徑</span>
+              <input type="number" step="0.1" name="support_wire_dia" class="inline-input-flex" style="max-width:45px;">
+              <span>mm</span>
+            </div>
+          </td>
+        </tr>
+        <tr style="height:19px;">
+          <td colspan="5" style="padding:1px 3px;"><input type="text" name="wire_chain_extra_1" placeholder="備用 / 吊鏈規格等填寫欄"></td>
+          <td colspan="5" style="padding:1px 3px;"><input type="text" name="wire_chain_extra_2" placeholder="備用填寫欄"></td>
+        </tr>
+
+        <!-- 吊具及其重量 (2列，維持原稿分欄，極致壓縮高度) -->
+        <tr style="height:15px;">
+          <td rowspan="2" class="v-header">吊具及<br>其重量</td>
+          <td colspan="2" class="th-label" style="height:15px; padding:1px;">吊　　鉤</td>
+          <td colspan="3" class="th-label" style="height:15px; padding:1px;">抓　　斗</td>
+          <td colspan="2" class="th-label" style="height:15px; padding:1px;">起重磁鐵</td>
+          <td colspan="3" class="th-label" style="height:15px; padding:1px;">吊鉤開口標距</td>
+        </tr>
+        <tr style="height:18px;">
+          <td colspan="2" style="height:18px; padding:1px 2px;">
+            <div class="cell-flex center-flex">
+              <input type="number" step="0.001" name="hook_weight" class="inline-input-flex" style="max-width:50px;">
+              <span>t</span>
+            </div>
+          </td>
+          <td colspan="3" style="height:18px; padding:1px 2px;">
+            <div class="cell-flex center-flex">
+              <input type="number" step="0.001" name="grab_weight" class="inline-input-flex" style="max-width:50px;">
+              <span>t</span>
+            </div>
+          </td>
+          <td colspan="2" style="height:18px; padding:1px 2px;">
+            <div class="cell-flex center-flex">
+              <input type="number" step="0.001" name="magnet_weight" class="inline-input-flex" style="max-width:50px;">
+              <span>t</span>
+            </div>
+          </td>
+          <td colspan="3" style="height:18px; padding:1px 2px;">
+            <div class="cell-flex center-flex">
+              <input type="number" step="0.1" name="hook_opening" class="inline-input-flex" style="max-width:60px;">
+              <span>mm</span>
+            </div>
+          </td>
+        </tr>
+
+        <!-- 安全裝置 (6列) -->
+        <tr>
+          <td rowspan="6" class="v-header">安全裝置</td>
+          <td colspan="4" style="text-align:left; font-size:11px; white-space:nowrap;">1.過捲預防裝置或預防過捲警報裝置</td>
+          <td>
+            <div class="checkbox-group center-flex">
+              <label class="chk-label"><input type="radio" name="safe_overhoist" value="有"> 有</label>
+              <label class="chk-label"><input type="radio" name="safe_overhoist" value="無"> 無</label>
+            </div>
+          </td>
+          <td colspan="4" style="text-align:left; font-size:11px; white-space:nowrap;">7.吊鈎防止脫落裝置</td>
+          <td>
+            <div class="checkbox-group center-flex">
+              <label class="chk-label"><input type="radio" name="safe_hook_latch" value="有"> 有</label>
+              <label class="chk-label"><input type="radio" name="safe_hook_latch" value="無"> 無</label>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td colspan="4" style="text-align:left; font-size:11px; white-space:nowrap;">2.過負荷預防裝置</td>
+          <td>
+            <div class="checkbox-group center-flex">
+              <label class="chk-label"><input type="radio" name="safe_overload" value="有"> 有</label>
+              <label class="chk-label"><input type="radio" name="safe_overload" value="無"> 無</label>
+            </div>
+          </td>
+          <td colspan="5" rowspan="5" style="vertical-align:top; padding:3px 5px;">
+            <div style="font-weight:600; font-size:11px; margin-bottom:2px;">8.其他：</div>
+            <textarea name="safe_other" class="form-textarea" style="height: calc(100% - 18px); min-height:80px;" placeholder="如：緊急停止按鈕、作業燈、喇叭警報器、水平儀、倒車警報器等安全附屬配件..."></textarea>
+          </td>
+        </tr>
+        <tr>
+          <td colspan="4" style="text-align:left; font-size:11px; white-space:nowrap;">3.安全閥及逆止閥(油壓式)</td>
+          <td>
+            <div class="checkbox-group center-flex">
+              <label class="chk-label"><input type="radio" name="safe_hydraulic_valves" value="有"> 有</label>
+              <label class="chk-label"><input type="radio" name="safe_hydraulic_valves" value="無"> 無</label>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td colspan="4" style="text-align:left; font-size:11px; white-space:nowrap;">4.伸臂背向止動裝置</td>
+          <td>
+            <div class="checkbox-group center-flex">
+              <label class="chk-label"><input type="radio" name="safe_boom_backstop" value="有"> 有</label>
+              <label class="chk-label"><input type="radio" name="safe_boom_backstop" value="無"> 無</label>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td colspan="4" style="text-align:left; font-size:11px; white-space:nowrap;">5.伸臂傾斜角指示裝置</td>
+          <td>
+            <div class="checkbox-group center-flex">
+              <label class="chk-label"><input type="radio" name="safe_angle_indicator" value="有"> 有</label>
+              <label class="chk-label"><input type="radio" name="safe_angle_indicator" value="無"> 無</label>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td colspan="4" style="text-align:left; font-size:11px; white-space:nowrap;">6.鋼索防鬆裝置</td>
+          <td>
+            <div class="checkbox-group center-flex">
+              <label class="chk-label"><input type="radio" name="safe_wire_slack" value="有"> 有</label>
+              <label class="chk-label"><input type="radio" name="safe_wire_slack" value="無"> 無</label>
+            </div>
+          </td>
+        </tr>
+
+        <!-- 制動裝置之種類及用途 (2列) -->
+        <tr>
+          <td colspan="2" rowspan="2" class="th-label" style="line-height:1.35; padding:2px 4px;">制動裝置之<br>種類及用途</td>
+          <td colspan="3" rowspan="2" style="padding:2px 4px;"><textarea name="brake_types" class="form-textarea" style="height:100%; min-height:44px; resize:none;" placeholder="如：捲揚、旋轉用－油壓制動煞車&#10;起伏、伸縮用－油壓缸行程逆止閥"></textarea></td>
+          <td class="th-label">捲　胴</td>
+          <td colspan="3">
+            <div class="cell-flex">
+              <span>用途：</span>
+              <input type="text" name="drum_purpose" class="inline-input-flex" placeholder="主捲揚用">
+            </div>
+          </td>
+          <td colspan="2">
+            <div class="cell-flex center-flex">
+              <span>直徑：</span>
+              <input type="number" step="1" name="drum_dia" class="inline-input-flex" style="max-width:45px;">
+              <span>mm</span>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="th-label">槽　輪</td>
+          <td colspan="3">
+            <div class="cell-flex">
+              <span>用途：</span>
+              <input type="text" name="sheave_purpose" class="inline-input-flex" placeholder="臂頭導向輪">
+            </div>
+          </td>
+          <td colspan="2">
+            <div class="cell-flex center-flex">
+              <span>直徑：</span>
+              <input type="number" step="1" name="sheave_dia" class="inline-input-flex" style="max-width:45px;">
+              <span>mm</span>
+            </div>
+          </td>
+        </tr>
+
+        <!-- 製造廠商及製造日期 (1列) -->
+        <tr>
+          <td colspan="2" class="th-label">製造廠商及製造年月</td>
+          <td colspan="5">
+            <div class="cell-flex">
+              <input type="text" name="mfg_company" class="inline-input-flex" style="flex:1 1 auto; min-width:0;" placeholder="製造廠商名稱">
+              <input type="text" inputmode="numeric" name="mfg_year" class="inline-input-flex" style="flex:0 0 34px; width:34px; text-align:center;" placeholder="年">
+              <span style="flex:0 0 auto;">年</span>
+              <input type="text" inputmode="numeric" name="mfg_month" class="inline-input-flex" style="flex:0 0 24px; width:24px; text-align:center;" placeholder="月">
+              <span style="flex:0 0 auto;">月</span>
+            </div>
+          </td>
+          <td colspan="2" class="th-label">製造序號(或刻印)</td>
+          <td colspan="2"><input type="text" name="mfg_serial" placeholder="如：UNIC-580123"></td>
+        </tr>
+
+        <!-- 備註與檢查合格戳記、檢查員、審核結果（依原表：戳記為兩格，檢查員／審核結果各為標題＋空白格） -->
+        <tr class="grow-head">
+          <td rowspan="4" class="v-header">備註</td>
+          <td colspan="4" rowspan="4" style="vertical-align:top; padding:4px 5px;">
+            <textarea name="remarks" class="form-textarea" style="height:100%; min-height:140px;" placeholder="型式、牌照號碼、引擎號碼、搭乘設備編號等"></textarea>
+          </td>
+          <td colspan="3" rowspan="4" class="stamp-cell">
+            <div class="stamp-wrap"><div class="stamp-label">※<br>檢<br>查<br>合<br>格<br>戳<br>記</div><div class="stamp-square"></div></div>
+          </td>
+          <td colspan="3" class="th-label stamp-head">※檢查員</td>
+        </tr>
+        <tr class="grow"><td colspan="3" class="stamp-blank"></td></tr>
+        <tr class="grow-head"><td colspan="3" class="th-label stamp-head">※審核結果</td></tr>
+        <tr class="grow"><td colspan="3" class="stamp-blank"></td></tr>
+      </tbody>
+    </table>
+
+    <!-- 頁尾說明與表單編號 -->
+    <div class="footer-row">
+      <div class="footer-note">
+        註：1. 本表應填寫二份，一份送檢查機構，一份事業單位留存。<br>
+        　　2. ※欄內，申請人請勿填寫。
+      </div>
+      <div class="footer-code">
+        表單編號　P3-61-13A　95.02
+      </div>
+    </div>
+  </form>
+</div>
+
+<script>
+  // ===== 範例數據 (三噸以下典型移動式起重機) =====
+  const SAMPLE_DATA = {
+    company_name: "大同工程股份有限公司",
+    crane_serial_no: "TC-2026-001",
+    company_address: "高雄市小港區大業北路 100 號",
+    industry_type: "營造業 / 機械安裝工程業",
+    install_address: "高雄市前鎮區成功二路 88 號（車號：ABC-8899）",
+    owner_name: "林志明",
+    crane_model_type: "卡車積載型移動式起重機 (油壓直伸式)",
+    company_tel: "(07) 812-3456",
+    lifting_capacity: 2.93,
+    contact_tel: "0912-345-678",
+
+    // 荷重性能
+    boom_len_1: 3.50, boom_len_2: 5.20, boom_len_3: 7.00, boom_len_4: 8.80, boom_len_5: 10.60, boom_len_6: "", boom_len_7: "", boom_len_8: "", boom_len_9: "",
+    radius_1: 1.50,   radius_2: 2.50,   radius_3: 4.00,   radius_4: 6.00,   radius_5: 8.50,   radius_6: "", radius_7: "", radius_8: "", radius_9: "",
+    load_1: 2.93,     load_2: 2.00,     load_3: 1.20,     load_4: 0.65,     load_5: 0.35,     load_6: "", load_7: "", load_8: "", load_9: "",
+
+    // 額定速率
+    speed_hoist: 18.5,
+    speed_luff: 1.2,
+    speed_travel: 90.0,
+    speed_slew: 2.5,
+
+    // 結構
+    max_boom_length: 10.60,
+    boom_angle_min: 1,
+    boom_angle_max: 78,
+    aux_boom_len_1: 2.10,
+    aux_boom_cnt_1: 1,
+    aux_boom_len_2: "",
+    aux_boom_cnt_2: "",
+    aux_boom_len_3: "",
+    aux_boom_cnt_3: "",
+    rotation_limit: 360,
+    max_working_radius: 9.80,
+    outrigger: "有",
+    carrier_info: "HINO 3.49T 專用貨車底盤",
+    travel_device: "輪胎式 (4×2 全輪氣煞)",
+
+    // 原動機
+    engine_purpose: "車輛行駛兼液壓泵驅動",
+    engine_type: "柴油共軌直噴渦輪增壓",
+    engine_power: "150 PS / 2600 rpm",
+
+    // 鋼索及吊鏈
+    main_wire_struct: "IWRC 6×Fi(29) 鍍鋅",
+    main_wire_dia: 8.0,
+    aux_wire_struct: "",
+    aux_wire_dia: "",
+    luff_wire_struct: "雙向液壓油壓缸起伏",
+    luff_wire_dia: "",
+    support_wire_struct: "",
+    support_wire_dia: "",
+    wire_chain_extra_1: "主捲鋼索安全係數 > 6.0 符合 CNS 標準",
+    wire_chain_extra_2: "",
+
+    // 吊具
+    hook_weight: 0.025,
+    grab_weight: "",
+    magnet_weight: "",
+    hook_opening: 35.0,
+
+    // 安全裝置
+    safe_overhoist: "有",
+    safe_hook_latch: "有",
+    safe_overload: "有",
+    safe_hydraulic_valves: "有",
+    safe_boom_backstop: "有",
+    safe_angle_indicator: "有",
+    safe_wire_slack: "有",
+    safe_other: "1. 配備無線遙控操作手柄。\n2. 車身水平儀、過載聲光警報蜂鳴器。\n3. 緊急停止急停按鈕 (車側及遙控器)。",
+
+    // 制動裝置
+    brake_types: "捲揚、旋轉用－油壓制動煞車\n起伏、伸縮用－油壓缸行程逆止閥",
+    drum_purpose: "主捲揚捲筒",
+    drum_dia: 180,
+    sheave_purpose: "臂端導輪",
+    sheave_dia: 160,
+
+    // 製造商與日期
+    mfg_company: "多田野 TADANO 株式會社 / 台灣總代理裝配",
+    mfg_year: 112,
+    mfg_month: 8,
+    mfg_serial: "ZR-293-20230815",
+
+    // 備註
+    remarks: "1. 伸臂材質：採用高張力合金鋼板 WEL-TEN 780 壓折焊接。\n2. 外伸撐座：前後各左右兩支，全展開跨距 3.8m。\n3. 本機經原廠強度與安定度計算合格。"
+  };
+
+  // ===== 表單操作函數 =====
+
+  function getFormData() {
+    const form = document.getElementById('craneForm');
+    const formData = new FormData(form);
+    const data = {};
+    for (const [key, value] of formData.entries()) {
+      data[key] = value;
+    }
+    const radios = form.querySelectorAll('input[type="radio"]');
+    radios.forEach(r => {
+      if (r.checked) {
+        data[r.name] = r.value;
+      }
+    });
+    return data;
+  }
+
+  function setFormData(data) {
+    const form = document.getElementById('craneForm');
+    for (const [key, value] of Object.entries(data)) {
+      const field = form.elements[key];
+      if (!field) continue;
+
+      if (field instanceof RadioNodeList || (field.length && field[0].type === 'radio')) {
+        for (let i = 0; i < field.length; i++) {
+          field[i].checked = (field[i].value === String(value));
+        }
+      } else if (field.type === 'checkbox') {
+        field.checked = Boolean(value);
+      } else {
+        field.value = (value !== null && value !== undefined) ? value : '';
+      }
+    }
+  }
+
+  function fillSampleData() {
+    setFormData(SAMPLE_DATA);
+    showToast("已帶入範例資料！");
+    autoSave();
+  }
+
+  function resetForm() {
+    if (confirm("確定要清空所有填寫內容嗎？")) {
+      document.getElementById('craneForm').reset();
+      showToast("表單已清空");
+      localStorage.removeItem("crane_form_draft");
+    }
+  }
+
+  function saveToLocal() {
+    const data = getFormData();
+    localStorage.setItem("crane_form_draft", JSON.stringify(data));
+    showToast("草稿已成功儲存至瀏覽器！");
+  }
+
+  function autoSave() {
+    const data = getFormData();
+    localStorage.setItem("crane_form_draft", JSON.stringify(data));
+  }
+
+  function loadFromLocal() {
+    const saved = localStorage.getItem("crane_form_draft");
+    if (!saved) {
+      alert("目前尚無儲存的草稿！");
+      return;
+    }
+    try {
+      const data = JSON.parse(saved);
+      setFormData(data);
+      showToast("已載入本機草稿！");
+    } catch (e) {
+      alert("讀取草稿失敗：" + e.message);
+    }
+  }
+
+  function exportJSON() {
+    const data = getFormData();
+    const jsonStr = JSON.stringify(data, null, 2);
+    const blob = new Blob([jsonStr], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    const filename = `移動式起重機明細表_${data.company_name || "未命名"}_${new Date().toISOString().slice(0,10)}.json`;
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast("已匯出 JSON 檔！");
+  }
+
+  function importJSON(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      try {
+        const data = JSON.parse(e.target.result);
+        setFormData(data);
+        showToast("已成功匯入 JSON 資料！");
+        autoSave();
+      } catch (err) {
+        alert("匯入失敗，請確認檔案格式是否正確！\n" + err.message);
+      }
+      event.target.value = "";
+    };
+    reader.readAsText(file);
+  }
+
+  function showToast(msg) {
+    const el = document.getElementById('saveStatus');
+    el.innerText = msg;
+    el.style.opacity = "1";
+    setTimeout(() => {
+      el.style.opacity = "0";
+    }, 3500);
+  }
+
+  function togglePreview() {
+    document.body.classList.toggle('preview-mode');
+    if (document.body.classList.contains('preview-mode')) {
+      showToast("已切換至 A4 紙張預覽尺寸");
+    } else {
+      showToast("已恢復標準網頁模式");
+    }
+  }
+
+  document.getElementById('craneForm').addEventListener('input', () => {
+    autoSave();
+  });
+
+  window.addEventListener('DOMContentLoaded', () => {
+    const saved = localStorage.getItem("crane_form_draft");
+    if (saved) {
+      try {
+        setFormData(JSON.parse(saved));
+        showToast("已恢復先前的編輯內容");
+      } catch(e){}
+    }
+  });
+</script>
+<script src="case-enhance.js?v=20261004u"></script>
+</body>
+</html>

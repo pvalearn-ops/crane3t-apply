@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+      <script src="../shared/case-bridge.js"></script>
+<meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>危險性機械檢查申請書產生器</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/docxtemplater/3.37.11/docxtemplater.js"></script>
+    <script src="https://unpkg.com/pizzip@3.1.4/dist/pizzip.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/1.3.8/FileSaver.js"></script>
+    <script src="https://unpkg.com/pizzip@3.1.4/dist/pizzip-utils.js"></script>
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: "微軟正黑體", "Microsoft JhengHei", sans-serif; padding: 20px; background-color: #f0f2f5; margin: 0; }
+        .container { max-width: 900px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        h2 { text-align: center; margin-bottom: 30px; color: #2c3e50; font-size: 26px; border-bottom: 2px solid #3498db; padding-bottom: 15px; letter-spacing: 2px; }
+        
+        /* 區塊分組設計 */
+        .section-title { font-size: 18px; color: #34495e; margin: 25px 0 15px; border-left: 4px solid #3498db; padding-left: 10px; font-weight: bold; }
+        .section-box { margin-bottom: 20px; padding: 20px; background: #f8f9fa; border-radius: 8px; border: 1px solid #e9ecef; }
+        
+        /* 勾選項樣式 */
+        .checkbox-group label { margin-right: 18px; cursor: pointer; display: inline-block; margin-bottom: 10px; font-size: 15px; color: #333; }
+        .checkbox-group input[type="checkbox"] { transform: scale(1.2); margin-right: 5px; }
+        
+        /* 表單 Grid 排版 */
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+        .form-group { display: flex; flex-direction: column; }
+        .form-group.full-width { grid-column: span 2; }
+        
+        label.field-label { font-weight: bold; margin-bottom: 8px; font-size: 14px; color: #555; }
+        input[type="text"], input[type="number"], select { padding: 10px 12px; border: 1px solid #ccd1d9; border-radius: 6px; font-size: 15px; background-color: white; transition: all 0.2s; }
+        input[type="text"]:focus, input[type="number"]:focus, select:focus { outline: none; border-color: #3498db; box-shadow: 0 0 0 3px rgba(52,152,219,0.15); }
+        
+        /* 民國日期輸入組 */
+        .roc-date-group { display: flex; align-items: center; gap: 8px; }
+        .roc-date-group input { width: 30%; text-align: center; padding: 10px 5px; }
+        .roc-date-group span { font-size: 15px; color: #555; font-weight: bold; }
+        
+        /* 按鈕樣式 */
+        button { width: 100%; background: #2980b9; color: white; padding: 16px 20px; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; margin-top: 30px; transition: background 0.3s; box-shadow: 0 4px 6px rgba(41,128,185,0.2); }
+        button:hover { background: #1a5276; transform: translateY(-1px); }
+        button:active { transform: translateY(1px); }
+
+        /* 三噸以下專用：隱藏不需填寫的欄位、地址選單、代檢機構 */
+        .hide-field { display: none !important; }
+        .addr-picker { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+        .addr-picker select { min-width: 130px; }
+        .agency-box { margin-top: 8px; padding: 10px 12px; background: #eff6ff; border-left: 4px solid #3498db; border-radius: 6px; font-size: 14px; line-height: 1.7; }
+
+        /* 手機版自適應 (螢幕寬度小於 768px 時觸發) */
+        @media (max-width: 768px) {
+            .form-grid { grid-template-columns: 1fr; gap: 15px; }
+            .form-group.full-width { grid-column: span 1; }
+            .container { padding: 20px 15px; }
+            .roc-date-group input { width: 100%; } /* 日期在極小螢幕自動調整 */
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>危險性機械檢查申請書</h2>
+    <form id="applyForm">
+        
+        <div class="section-title">一、檢查類別與機具選項</div>
+        <div class="section-box">
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label class="field-label">機具種類：</label>
+                <select id="machineType">
+                    <option value="">-- 請選擇機具種類 --</option>
+                    <option value="m1">固定式起重機</option>
+                    <option value="m2">移動式起重機</option>
+                    <option value="m3">營建用升降機</option>
+                    <option value="m4">吊籠</option>
+                    <option value="m5">營建用提升機</option>
+                </select>
+            </div>
+            <div class="checkbox-group">
+                <label class="field-label" style="display:block; margin-bottom: 10px;">檢查種類 (可複選)：</label>
+                <label><input type="checkbox" id="t1"> 定期檢查</label>
+                <label><input type="checkbox" id="t2"> 變更檢查</label>
+                <label><input type="checkbox" id="t3"> 重新檢查</label>
+                <label><input type="checkbox" id="t4"> 既有機械檢查</label>
+                <label><input type="checkbox" id="t5"> 竣工檢查(註4)</label>
+                <label><input type="checkbox" id="t6"> 複查</label>
+                <label><input type="checkbox" id="t7"> 休息日檢查</label>
+            </div>
+        </div>
+
+        <div class="section-title">二、機具規格與檢查資料</div>
+        <div class="form-grid">
+            <div class="form-group">
+                <label class="field-label">種類及型式：</label>
+                <input type="text" id="type_model">
+            </div>
+            <div class="form-group">
+                <label class="field-label">吊升/積載荷重 (公噸)：</label>
+                <input type="text" id="load">
+            </div>
+            <div class="form-group hide-field">
+                <label class="field-label">導軌或升降路高度 (公尺)：</label>
+                <input type="text" id="height">
+            </div>
+            <div class="form-group hide-field">
+                <label class="field-label">前次檢查代檢員：</label>
+                <input type="text" id="prev_inspector">
+            </div>
+
+            <div class="form-group hide-field">
+                <label class="field-label">構造號碼 (10碼)：</label>
+                <input type="text" id="structure_no" maxlength="10">
+            </div>
+            <div class="form-group hide-field">
+                <label class="field-label">機械編號 (13碼)：</label>
+                <input type="text" id="machine_no" maxlength="13">
+            </div>
+
+            <div class="form-group hide-field">
+                <label class="field-label">合格證有效期限 (自)：</label>
+                <div class="roc-date-group">
+                    <input type="number" id="cert_s_y" placeholder="年"><span>年</span>
+                    <input type="number" id="cert_s_m" placeholder="月"><span>月</span>
+                    <input type="number" id="cert_s_d" placeholder="日"><span>日</span>
+                </div>
+            </div>
+            <div class="form-group hide-field">
+                <label class="field-label">合格證有效期限 (至)：</label>
+                <div class="roc-date-group">
+                    <input type="number" id="cert_e_y" placeholder="年"><span>年</span>
+                    <input type="number" id="cert_e_m" placeholder="月"><span>月</span>
+                    <input type="number" id="cert_e_d" placeholder="日"><span>日</span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="field-label">希望受檢日期：</label>
+                <div class="roc-date-group">
+                    <input type="number" id="req_y" placeholder="年"><span>年</span>
+                    <input type="number" id="req_m" placeholder="月"><span>月</span>
+                    <input type="number" id="req_d" placeholder="日"><span>日</span>
+                </div>
+            </div>
+            <div class="form-group"></div>
+            
+            <div class="form-group full-width">
+                <label class="field-label">設置地址或受檢地點：</label>
+                <input type="text" id="address">
+            </div>
+            <div class="form-group full-width">
+                <label class="field-label">檢查通知寄達地址：</label>
+                <input type="text" id="mail_address">
+            </div>
+        </div>
+
+        <div class="section-title">三、事業單位與廠商資料</div>
+        <div class="form-grid">
+            <div class="form-group full-width">
+                <label class="field-label">事業單位名稱：</label>
+                <input type="text" id="company">
+            </div>
+            
+            <div class="form-group">
+                <label class="field-label">統一編號：</label>
+                <input type="text" id="tax_id">
+            </div>
+            <div class="form-group">
+                <label class="field-label">承辦人：</label>
+                <input type="text" id="contact">
+            </div>
+            
+            <div class="form-group">
+                <label class="field-label">手機 (接收簡訊用)：</label>
+                <input type="text" id="mobile">
+            </div>
+            <div class="form-group">
+                <label class="field-label">電話：</label>
+                <input type="text" id="tel">
+            </div>
+            <div class="form-group">
+                <label class="field-label">傳真：</label>
+                <input type="text" id="fax">
+            </div>
+
+            <div class="form-group hide-field full-width" style="margin-top: 10px; border-top: 1px dashed #ccc; padding-top: 15px;">
+                <label class="field-label">機具保養廠商：</label>
+                <input type="text" id="maintenance_comp">
+            </div>
+            <div class="form-group hide-field">
+                <label class="field-label">保養廠商連絡人：</label>
+                <input type="text" id="maintenance_contact">
+            </div>
+            <div class="form-group hide-field">
+                <label class="field-label">保養廠商電話：</label>
+                <input type="text" id="maintenance_tel">
+            </div>
+        </div>
+
+        <div class="section-title">四、其他與收據資訊</div>
+        <div class="form-grid">
+            <div class="form-group hide-field full-width">
+                <label class="field-label">機具變更部分：</label>
+                <input type="text" id="changed_parts">
+            </div>
+
+            <div class="form-group hide-field">
+                <label class="field-label">停止使用期間 (起)：</label>
+                <div class="roc-date-group">
+                    <input type="number" id="stop_s_y" placeholder="年"><span>年</span>
+                    <input type="number" id="stop_s_m" placeholder="月"><span>月</span>
+                    <input type="number" id="stop_s_d" placeholder="日"><span>日</span>
+                </div>
+            </div>
+            <div class="form-group hide-field">
+                <label class="field-label">停止使用期間 (迄)：</label>
+                <div class="roc-date-group">
+                    <input type="number" id="stop_e_y" placeholder="年"><span>年</span>
+                    <input type="number" id="stop_e_m" placeholder="月"><span>月</span>
+                    <input type="number" id="stop_e_d" placeholder="日"><span>日</span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="field-label">檢查費 (元)：</label>
+                <input type="number" id="fee">
+            </div>
+            <div class="form-group">
+                <label class="field-label">備註：</label>
+                <input type="text" id="note">
+            </div>
+
+            <div class="form-group full-width" style="margin-top: 10px; border-top: 1px dashed #ccc; padding-top: 15px;">
+                <label class="field-label">收據抬頭：</label>
+                <input type="text" id="receipt_title">
+            </div>
+            <div class="form-group full-width">
+                <label class="field-label">收據寄發地址：</label>
+                <input type="text" id="receipt_address">
+            </div>
+        </div>
+        
+        <button type="button" onclick="generateWord()">產生並下載 Word 申請書</button>
+        <button type="button" onclick="window.open('print.html' + location.search, '_blank')" style="background:#0f766e;margin-top:12px">🖨️ A4 列印預覽（PDF）</button>
+    </form>
+</div>
+
+<script>
+    // 讀取遠端（或同資料夾下）的範本檔案
+    function loadFile(url, callback) {
+        PizZipUtils.getBinaryContent(url, callback);
+    }
+
+    // 輔助函式：將使用者輸入的年月日組合成字串
+    function formatROCDate(yId, mId, dId) {
+        const y = document.getElementById(yId).value;
+        const m = document.getElementById(mId).value;
+        const d = document.getElementById(dId).value;
+        if (y || m || d) {
+            return `${y} 年 ${m} 月 ${d} 日`;
+        }
+        return "";
+    }
+
+    // 主要產出 Word 的函式
+    function generateWord() {
+        // 確保你的 Word 檔名是 template.docx 並且放在同一個資料夾下
+        loadFile("template.docx?v=20261004", function (error, content) {
+            if (error) { 
+                alert("找不到 template.docx，請確認檔案與 HTML 放在同一個資料夾，且必須在伺服器環境下執行！");
+                throw error; 
+            }
+
+            var zip = new PizZip(content);
+            var doc = new window.docxtemplater(zip, {
+                paragraphLoop: true,
+                linebreaks: true,
+                nullGetter: function () { return ''; },
+            });
+
+            // 取得今天的日期，用來填寫右下角的申請日
+            const today = new Date();
+            const twYear = today.getFullYear() - 1911;
+
+            // 處理自訂的民國日期組合
+            const certStartStr = formatROCDate('cert_s_y', 'cert_s_m', 'cert_s_d');
+            const certEndStr   = formatROCDate('cert_e_y', 'cert_e_m', 'cert_e_d');
+            const stopStartStr = formatROCDate('stop_s_y', 'stop_s_m', 'stop_s_d');
+            const stopEndStr   = formatROCDate('stop_e_y', 'stop_e_m', 'stop_e_d');
+            const reqDateStr   = formatROCDate('req_y', 'req_m', 'req_d');
+
+            // 取得單選機具種類的值
+            const mType = document.getElementById('machineType').value;
+
+            // 打包所有資料準備塞入 Word
+            const templateData = {
+                // ================= 文字輸入欄位 =================
+                company: document.getElementById('company').value,
+                tax_id: document.getElementById('tax_id').value,
+                address: document.getElementById('address').value,
+                mail_address: document.getElementById('mail_address').value,
+                contact: document.getElementById('contact').value,
+                mobile: document.getElementById('mobile').value,
+                tel: document.getElementById('tel').value,
+                fax: document.getElementById('fax').value,
+                load: document.getElementById('load').value,
+                height: document.getElementById('height').value,
+                type_model: document.getElementById('type_model').value,
+                structure_no: document.getElementById('structure_no').value,
+                machine_no: document.getElementById('machine_no').value,
+                prev_inspector: document.getElementById('prev_inspector').value,
+                
+                maintenance_comp: document.getElementById('maintenance_comp').value,
+                maintenance_contact: document.getElementById('maintenance_contact').value,
+                maintenance_tel: document.getElementById('maintenance_tel').value,
+                
+                changed_parts: document.getElementById('changed_parts').value,
+                fee: document.getElementById('fee').value,
+                note: document.getElementById('note').value,
+                receipt_title: document.getElementById('receipt_title').value,
+                receipt_address: document.getElementById('receipt_address').value,
+                
+                // ================= 日期組合欄位 =================
+                // 這裡對應 Word 裡面手動換行的上下兩格變數
+                cert_start_text: certStartStr ? `自 ${certStartStr}` : "",
+                cert_end_text:   certEndStr   ? `至 ${certEndStr}`   : "",
+                stop_start_text: stopStartStr ? `自 ${stopStartStr}` : "",
+                stop_end_text:   stopEndStr   ? `至 ${stopEndStr}`   : "",
+                
+                req_date: reqDateStr,
+
+                // 右下角自動填表日
+                app_y: twYear,
+                app_m: today.getMonth() + 1,
+                app_d: today.getDate(),
+
+                // ================= 勾選框判斷 =================
+                // 機具單選 (有選到的對應 m1~m5 填入☑，沒選到填入☐)
+                chk_m1: mType === 'm1' ? '☑' : '☐',
+                chk_m2: mType === 'm2' ? '☑' : '☐',
+                chk_m3: mType === 'm3' ? '☑' : '☐',
+                chk_m4: mType === 'm4' ? '☑' : '☐',
+                chk_m5: mType === 'm5' ? '☑' : '☐',
+
+                // 檢查種類複選 (有勾選填入☑，沒勾選填入☐)
+                chk_t1: document.getElementById('t1').checked ? '☑' : '☐',
+                chk_t2: document.getElementById('t2').checked ? '☑' : '☐',
+                chk_t3: document.getElementById('t3').checked ? '☑' : '☐',
+                chk_t4: document.getElementById('t4').checked ? '☑' : '☐',
+                chk_t5: document.getElementById('t5').checked ? '☑' : '☐',
+                chk_t6: document.getElementById('t6').checked ? '☑' : '☐',
+                chk_t7: document.getElementById('t7').checked ? '☑' : '☐',
+                chk_lift: '☑'
+            };
+
+            // 代行檢查機構（依受檢地縣市自動判定）
+            Object.assign(templateData, window.getAgencyData ? window.getAgencyData() : {});
+            if (!templateData.agency_name && !confirm("尚未選擇受檢地點縣市，申請書「此致」的代行檢查機構將為空白。仍要產生嗎？")) return;
+
+            // 執行渲染：將 templateData 的資料塞進 doc 裡面
+            doc.render(templateData);
+
+            // 產生檔案並觸發下載
+            var out = doc.getZip().generate({
+                type: "blob",
+                mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            });
+            
+            // 下載的檔名自動帶上公司名稱，方便歸檔
+            const companyName = templateData.company || "未命名";
+            saveAs(out, "危險性機械檢查申請書_" + companyName + ".docx");
+        });
+    }
+</script>
+
+<script src="../shared/tw-zip.js"></script>
+<script src="case-persist.js"></script>
+<script src="form-config.js"></script>
+</body>
+</html>

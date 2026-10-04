@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <script src="../shared/case-bridge.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>安定度計算（積載型使用）</title>
+<style>
+  :root{
+    --blue:#0033cc; --hd:#e9eef7; --accent:#1a4fa0;
+    --ok:#0a7d28; --ng:#c0261b; --soft:#f6f8fc; --border:#c9d2e0;
+  }
+  *{box-sizing:border-box;}
+  body{font-family:"Microsoft JhengHei","PMingLiU","Segoe UI",sans-serif;
+    margin:0;color:#111;background:#eceef2;font-size:14px;line-height:1.5;}
+  .toolbar{position:sticky;top:0;z-index:50;background:#1a4fa0;color:#fff;
+    padding:8px 14px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;
+    box-shadow:0 2px 6px rgba(0,0,0,.2);}
+  .toolbar b{font-size:15px;margin-right:10px;}
+  .toolbar button{background:#fff;color:#1a4fa0;border:none;border-radius:5px;
+    padding:6px 12px;font-size:13px;cursor:pointer;font-weight:bold;}
+  .toolbar button:hover{background:#dbe6fb;}
+  .toolbar button.primary{background:#ffd23f;color:#5a4300;}
+  .toolbar .hint{font-size:12px;opacity:.9;font-weight:normal;}
+  .wrap{max-width:1040px;margin:16px auto;padding:0 10px;}
+  .page{background:#fff;border:1px solid var(--border);border-radius:6px;
+    padding:26px 30px;margin-bottom:20px;box-shadow:0 1px 4px rgba(0,0,0,.08);}
+  h1{font-size:22px;text-align:center;margin:0 0 18px;letter-spacing:2px;}
+  h2{font-size:17px;border-left:6px solid var(--accent);padding-left:10px;
+    margin:26px 0 12px;color:#123;}
+  h3{font-size:15px;margin:16px 0 8px;color:#234;}
+  .sub{color:#666;font-size:12px;text-align:center;margin-top:-12px;margin-bottom:8px;}
+  table{border-collapse:collapse;width:100%;margin:6px 0;}
+  th,td{border:1px solid var(--border);padding:5px 7px;text-align:center;}
+  th{background:var(--hd);font-weight:bold;}
+  td.lbl{text-align:left;background:var(--soft);}
+  input[type=number]{width:100%;border:1px solid #b9c4d6;border-radius:4px;
+    padding:4px 5px;font-size:13px;text-align:center;color:var(--blue);font-weight:bold;
+    background:#fffef7;font-family:inherit;}
+  input:focus{outline:2px solid #7fa8e8;}
+  .out{color:#111;font-weight:bold;}
+  table.a1tbl td, table.a1tbl th{padding:4px 5px;font-size:12.5px;}
+  table.a1tbl td.grp{background:#eef3fb;font-weight:bold;}
+  table.a1tbl td.dcell{background:#fff8e1;}
+  table.a1tbl td.na{background:#f0f0f0;}
+  .a1method{font-size:12.5px;line-height:1.9;margin-top:8px;border:1px solid var(--border);border-radius:5px;padding:8px 12px;background:var(--soft);}
+  .a1method ol{margin:4px 0 4px 20px;padding:0;}
+  .a1method p{margin:4px 0 0;}
+  .a1method .frac{display:inline-block;text-align:center;vertical-align:middle;margin:0 4px;}
+  .a1method .frac .n{border-bottom:1.5px solid #333;padding:0 6px;display:block;}
+  .a1method .frac .d{padding:0 6px;display:block;}
+  .params{display:grid;grid-template-columns:1fr 1fr;gap:0 24px;}
+  @media(max-width:760px){.params{grid-template-columns:1fr;}}
+  .prow{display:grid;grid-template-columns:26px 1fr 60px 96px 54px;gap:6px;
+    align-items:center;padding:3px 0;border-bottom:1px dashed #e3e8f0;}
+  .prow .no{color:#888;font-size:12px;}
+  .prow .sym{color:#555;font-size:12px;text-align:center;}
+  .prow .unit{color:#555;font-size:12px;}
+  .prow.derived input{background:#eef1f5;color:#111;cursor:not-allowed;}
+  .formula{background:var(--soft);border:1px solid var(--border);border-radius:5px;
+    padding:10px 14px;margin:8px 0;font-size:14px;overflow-x:auto;}
+  .formula .frac{display:inline-block;text-align:center;vertical-align:middle;margin:0 4px;}
+  .formula .frac .n{border-bottom:1.5px solid #333;padding:0 6px;display:block;}
+  .formula .frac .d{padding:0 6px;display:block;}
+  .badge{display:inline-block;padding:2px 12px;border-radius:14px;font-weight:bold;
+    color:#fff;font-size:13px;margin-left:6px;}
+  .badge.ok{background:var(--ok);} .badge.ng{background:var(--ng);} .badge.na{background:#999;}
+  .resultline{font-size:15px;margin:10px 0;padding:8px 12px;background:#fbfcfe;
+    border:1px solid var(--border);border-radius:5px;}
+  .imgslot{margin:12px 0;text-align:center;}
+  .imgslot figure{margin:0;display:inline-block;max-width:100%;}
+  .imgslot img{max-width:100%;border:1px solid #bbb;border-radius:4px;background:#fff;min-height:60px;}
+  .imgslot figcaption{font-size:12px;color:#666;margin-top:4px;}
+  .note{font-size:12px;color:#555;background:#fff8e6;border:1px solid #f0d98a;
+    border-radius:5px;padding:8px 12px;margin:10px 0;}
+  /* ---- 附件4 ---- */
+  #a4Table th,#a4Table td{white-space:nowrap;padding:6px 10px;}
+  #a4Table input[type=number]{width:84px;}
+  #a4Table tr.sec .secheader{text-align:left;background:#dfe8f6;font-size:15px;
+    border-top:2px solid #1a4fa0;padding:8px 12px;}
+  #a4Table tr.sec .secheader b{font-size:17px;color:#1a4fa0;margin:0 4px;}
+  .btn-add-sm{background:var(--ok);color:#fff;border:none;border-radius:5px;
+    padding:4px 12px;font-size:13px;font-weight:bold;cursor:pointer;margin-left:14px;}
+  .btn-add-sm:hover{filter:brightness(1.1);}
+  .del{color:var(--ng);cursor:pointer;font-weight:bold;border:1px solid #e2b3af;
+    background:#fdeceb;border-radius:4px;padding:2px 8px;}
+  tr.worst td{background:#fff3cd !important;font-weight:bold;}
+  tr.norisk td.out{color:#888;}
+  .tbl-scroll{overflow-x:auto;}
+  @page{size:A4 portrait;margin:10mm;}
+  @page a4land{size:A4 landscape;margin:8mm;}
+  @media print{
+    body{background:#fff;font-size:12px;}
+    .toolbar,.no-print{display:none !important;}
+    .page{box-shadow:none;border:none;page-break-after:always;padding:0;}
+    .wrap{margin:0;max-width:none;}
+    #page-a4{page:a4land;}
+    input[type=number]{border:none;background:none !important;color:#000;
+      -webkit-appearance:none;appearance:none;}
+    .prow.derived input{background:none;}
+  }
+</style>
+</head>
+<body>
+<div class="toolbar no-print">
+  <b>安定度計算</b>
+  <button class="primary" onclick="applyState(REFERENCE_STATE)">📥 帶入參考數據</button>
+  <button onclick="clearAll()">🗑 清空全部</button>
+  <button onclick="window.print()">🖨 列印 / 匯出PDF</button>
+  <button onclick="saveLocal()">💾 儲存</button>
+  <span class="hint">藍色數字為輸入欄位，改動後全部自動重算。</span>
+</div>
+<div class="wrap">
+
+<!-- ===================== PAGE 1 : 主計算 ===================== -->
+<div class="page" id="page-main">
+  <h1>安定度計算（積載型使用）</h1>
+
+  <h2>一、計算數據</h2>
+  <div class="params" id="paramGrid"></div>
+
+  <h2>二、後方安定度</h2>
+  <p style="font-size:13px">依據移動式起重機安全檢查構造標準第17條第一項第一款：伸臂中心線之鉛直面與起重機之行駛方向成直角時，位於伸臂所在側支點上之重量，應為起重機重量之百分之十五以上。</p>
+  <div class="imgslot"><figure><img src="rear_perpendicular.png" alt="後方安定度(直角)示意圖"><figcaption>後方安定度（直角）示意圖</figcaption></figure></div>
+  <div class="formula">Ra ≧ 0.15 × Wb ，∵ Ra ＝ L1 × Wb / B1 ∴ L1 / B1 ≧ 0.15</div>
+  <div class="resultline">⇒ L1 / B1 ＝ <span class="out" id="r_L1">-</span> / <span class="out" id="r_B1">-</span> ＝ <span class="out" id="r_L1B1">-</span> <span id="b_back1" class="badge na">-</span></div>
+
+  <p style="font-size:13px;margin-top:18px">依據第17條第一項第二款：伸臂中心線之鉛直面與起重機之行駛方向一致時，位於伸臂所在側支點上之重量，應大於起重機重量之百分之十五與平均輪距和軸距之比值之乘積。</p>
+  <div class="imgslot"><figure><img src="rear_parallel.png" alt="後方安定度(平行)示意圖"><figcaption>後方安定度（平行）示意圖</figcaption></figure></div>
+  <div class="formula">Rb ≧ 0.15 × Wb × B / H ，∵ Rb ＝ L2 × Wb / H ∴ L2 / B ≧ 0.15</div>
+  <div class="resultline">⇒ L2 / B ＝ <span class="out" id="r_L2">-</span> / <span class="out" id="r_B">-</span> ＝ <span class="out" id="r_L2B">-</span> <span id="b_back2" class="badge na">-</span></div>
+
+  <h2>三、前方安定度</h2>
+  <p style="font-size:13px">除水上起重機外，移動式起重機之前方安定度值，應為 1.15 以上。SF ＝ (Wp＋Wa＋Wo)／(Wp＋Wa) ≧ 1.15，影響前方安定度之重量取最不利安定之狀態（詳附件4）。</p>
+  <div class="note" id="worstNote">-</div>
+  <div class="imgslot"><figure><img src="front.png" alt="前方安定度示意圖"><figcaption>前方安定度示意圖</figcaption></figure></div>
+  <div class="formula">
+    SF ＝
+    <span class="frac"><span class="n">Wp ＋ Wa ＋ Wo</span><span class="d">Wp ＋ Wa</span></span>
+    ＝
+    <span class="frac"><span class="n" id="f_num">-</span><span class="d" id="f_den">-</span></span>
+    ＝ <span class="out" id="r_SF">-</span> <span id="b_front" class="badge na">-</span>
+  </div>
+
+  <h2>四、左右方安定度</h2>
+  <p style="font-size:13px">除履帶式起重機外，於行駛方向為水平且堅固地面上，左右方向傾斜30度時不致翻倒。L′×cos30° ≧ h′×sin30° ⇒ L′×√3 / h′ ≧ 1</p>
+  <div class="imgslot"><figure><img src="side.png" alt="左右方安定度示意圖"><figcaption>左右方安定度示意圖</figcaption></figure></div>
+  <div class="resultline">⇒ <span class="out" id="r_Lp">-</span> × √3 / <span class="out" id="r_hp">-</span> ＝ <span class="out" id="r_side">-</span> <span id="b_side" class="badge na">-</span></div>
+</div>
+
+<!-- ===================== PAGE 2 : 附件1 ===================== -->
+<div class="page" id="page-a1">
+  <h1>附件1　伸臂重心計算</h1>
+  <p class="sub">伸臂長度為各伸出狀態之伸臂總長；伸臂重量、油壓缸重量依節輸入。下表各伸出狀態之伸出比例、重心位置與重心 d 依計算方式自動計算。</p>
+  <div class="tbl-scroll"><table id="boomTable" class="a1tbl"></table></div>
+  <div class="tbl-scroll"><table id="dTable" class="a1tbl"></table></div>
+  <div class="a1method">
+    <b>伸臂重心計算方式：</b>
+    <ol>
+      <li>計算第 n 節吊桿重心位置 ＝ Σ(第 n 節伸臂長度 × 第 n 節伸出比例) － 第 n 節伸臂長度 ／ 2</li>
+      <li>計算油壓缸重心位置 ＝
+        <span class="frac"><span class="n">Σ(第 n 節伸臂長度 × 第 n 節伸出比例) － 第 n 節伸臂長度 ＋ Σ(第 n+1 節伸臂長度 × 第 n+1 節伸出比例)</span><span class="d">2</span></span></li>
+      <li>重心位置 ＝
+        <span class="frac"><span class="n">Σ(第 n 節伸臂重心位置 × 第 n 節伸臂重量) ＋ Σ(第 n 節油壓缸重心位置 × 第 n 節油壓缸重量)</span><span class="d">伸臂總重 ＋ 油壓缸總重</span></span></li>
+    </ol>
+    <p>伸出比例：有油壓缸之節（第 1～油壓缸支數節）依序全伸（1）或未伸（0）；其餘同步伸縮之節，伸出比例 ＝ (伸出節數 － 油壓缸支數) ／ (伸臂節數 － 油壓缸支數)。</p>
+  </div>
+</div>
+
+<!-- ===================== PAGE 3 : 附件2 ===================== -->
+<div class="page" id="page-a2">
+  <h1>附件2　伸臂重量中之前端等價質量</h1>
+  <p class="sub">依附件1 之伸臂資料自動計算，各伸出狀態之前端等價質量 (Wp)。</p>
+  <div class="tbl-scroll"><table id="a2W" class="a1tbl"></table></div>
+  <h3>伸臂</h3>
+  <div class="tbl-scroll"><table id="a2Seg" class="a1tbl"></table></div>
+  <h3>油壓缸</h3>
+  <div class="tbl-scroll"><table id="a2Cyl" class="a1tbl"></table></div>
+  <h3>伸臂重量中之前端等價質量彙整</h3>
+  <div class="tbl-scroll"><table id="a2Table" class="a1tbl"></table></div>
+  <div class="a1method">
+    <b>前端等價質量計算方式：</b>
+    <ol>
+      <li>第 n 節起點 ＝ Σ(第 1～n 節伸臂長度 × 伸出比例) － 第 n 節伸臂長度；終點 ＝ Σ(第 1～n 節伸臂長度 × 伸出比例)。油壓缸終點取至第 n+1 節。</li>
+      <li>超出重心之長度：終點 ＜ 重心 d 時為 0；起點 ＞ 重心 d 時為（終點 － 起點）；其餘為（終點 － 重心 d）。重心 d 依附件1 各伸出狀態之重心。</li>
+      <li>伸臂前端等價質量 Wp′ ＝ Σ(第 n 節超出重心之長度 ／ 第 n 節伸臂長度 × 第 n 節伸臂重量)</li>
+      <li>油壓缸前端等價質量 Wp″ ＝ Σ(第 n 支超出重心之長度 ／（終點 － 起點）× 第 n 支油壓缸重量)</li>
+      <li>伸臂重量中之前端等價質量 Wp ＝ (Wp′ ＋ Wp″) ／ 1000（公噸）</li>
+    </ol>
+  </div>
+</div>
+
+<!-- ===================== PAGE 4 : 附件3 ===================== -->
+<div class="page" id="page-a3">
+  <h1>附件3　車台重心高度計算</h1>
+  <div class="imgslot"><figure><img src="chassis.png" alt="車台重心示意圖"><figcaption>車台重心示意圖</figcaption></figure></div>
+  <div class="tbl-scroll"><table id="a3Table"></table></div>
+  <div class="formula">
+    h′ ＝
+    <span class="frac"><span class="n">Ws×h1 ＋ Wf×h2 ＋ Wh×h3 ＋ Wr×h4</span><span class="d">Ws ＋ Wf ＋ Wh ＋ Wr</span></span>
+    ＝ <span class="out" id="r_hprime">-</span> (cm)
+  </div>
+</div>
+
+<!-- ===================== PAGE 5 : 附件4 ===================== -->
+<div class="page" id="page-a4">
+  <h1>附件4　前方安定度計算</h1>
+  <p class="sub">伸臂長度以區段標題呈現於各組上方；於各區段標題右側按「＋ 新增列」即可在該伸臂長度下新增一列（空白供輸入）。SF 最小（最不利）之列以黃底標示，並帶回第一頁前方安定度。此頁列印時自動採橫印。</p>
+  <div class="tbl-scroll"><table id="a4Table"></table></div>
+</div>
+
+</div>
+
+<script>
+/* =================== 參考數據 =================== */
+const REFERENCE_STATE = {
+  params:{ Wb:8420, Wf:1187, Wh:30, B1:178.5, B2:166.5, H:487, h:340, Lw:480, thetaM:78, S:70,
+           h1:92, h2:130.7, h3:261.7, h4:325.2 },
+  boom:{ lengths:[393,633,872,1105,1338,1571], segW:[278,165,136,112,98,85], cylW:[57,48,20] },
+  rows:[[393,3030,270],[393,3030,300],[393,3030,360],[633,3030,270],[633,3030,300],[633,3030,390],[633,2430,450],[633,2130,500],[872,3030,270],[872,3030,300],[872,3030,400],[872,2430,450],[872,2130,500],[872,1880,550],[872,1630,600],[872,1330,700],[872,1030,848],[1105,2030,400],[1105,2030,450],[1105,1830,500],[1105,1650,550],[1105,1480,600],[1105,1230,700],[1105,1030,800],[1105,880,900],[1105,780,1000],[1105,730,1081],[1338,1330,450],[1338,1330,500],[1338,1200,550],[1338,1100,600],[1338,950,700],[1338,830,800],[1338,730,900],[1338,650,1000],[1338,600,1100],[1338,550,1200],[1338,500,1314],[1571,530,600],[1571,430,700],[1571,380,800],[1571,380,900],[1571,330,1000],[1571,330,1100],[1571,280,1200],[1571,280,1300],[1571,250,1400],[1571,230,1547]].map(r=>({L:r[0],Wa:r[1],r:r[2]}))
+};
+const EMPTY_STATE = {
+  params:{ Wb:'',Wf:'',Wh:'',B1:'',B2:'',H:'',h:'',Lw:'',thetaM:'',S:'',h1:'',h2:'',h3:'',h4:'' },
+  boom:{ lengths:[], segW:[], cylW:[] },
+  rows:[]
+};
+
+/* 主要參數欄位定義 (中文名, 符號, 單位, key, 可輸入?) */
+const PARAM_DEFS = [
+  ['起重機重量(車重+起重機)','Wb','kg','Wb',true],
+  ['腳架、立拱重量','Wf','kg','Wf',true],
+  ['伸臂重量','Wr','kg','Wr',false],
+  ['車重(不含起重機)','Ws','kg','Ws',false],
+  ['吊具組重量','Wh','kg','Wh',true],
+  ['前輪距','B1','cm','B1',true],
+  ['後輪距','B2','cm','B2',true],
+  ['軸距','H','cm','H',true],
+  ['車高','h','cm','h',true],
+  ['外伸腳距離','Lw','cm','Lw',true],
+  ['吊桿最大起伏角度','θm','度','thetaM',true],
+  ['前輪到旋轉中心距離','S','cm','S',true],
+  ['1節時伸臂總長度','L1′','cm','L1p',false],
+  ['1節時伸臂重心與軸心距離','d1','cm','d1',false],
+  ['平均輪距','B','cm','Bavg',false],
+  ['起重機重心至地面垂直距離','h′','cm','hprime',false]
+];
+const A3_DEFS = [
+  ['車台(不含起重機) 重心至地面垂直距離','h1','cm','h1',true],
+  ['車台(不含起重機) 重量','Ws','kg','Ws',false],
+  ['腳架、立拱 重心至地面垂直距離','h2','cm','h2',true],
+  ['腳架、立拱 重量','Wf','kg','Wf',false],
+  ['吊具組 重心至地面垂直距離','h3','cm','h3',true],
+  ['吊具組 重量','Wh','kg','Wh',false],
+  ['伸臂 重心至地面垂直距離','h4','cm','h4',true],
+  ['伸臂 重量','Wr','kg','Wr',false]
+];
+
+const LSK='安定度計算_state_v2';
+let state = load() || clone(EMPTY_STATE);
+function clone(o){return JSON.parse(JSON.stringify(o));}
+const rad = d=>d*Math.PI/180;
+function parseNum(x){ if(x===''||x==null) return null; const n=Number(x); return isNaN(n)?null:n; }
+function fmt(v,n=2){ if(typeof v==='string') return v; if(typeof v==='number'&&isFinite(v)) return v.toFixed(n); return '-'; }
+function setTxt(id,v){const e=document.getElementById(id); if(e)e.textContent=v;}
+function badge(id,val,thr,tOk,tNg){const el=document.getElementById(id);if(!el)return;
+  if(typeof val!=='number'||!isFinite(val)){el.className='badge na';el.textContent='—';return;}
+  const ok=val>=thr; el.className='badge '+(ok?'ok':'ng'); el.textContent=ok?tOk:tNg;}
+
+/* =================== 計算引擎 (已對照 Excel 驗證) =================== */
+function engine(){
+  const P=state.params, B=state.boom;
+  const lengths=(B.lengths||[]).filter(x=>x!==''&&x!=null&&!isNaN(x)).map(Number);
+  const segW=(B.segW||[]).slice(0,lengths.length).map(x=>Number(x)||0);
+  const cylW=(B.cylW||[]).filter(x=>x!==''&&x!=null&&!isNaN(x)).map(Number);
+  const numSeg=lengths.length, numCyl=cylW.length;
+  const calcLen=lengths.map((v,i)=> i===0? v : v-lengths[i-1]);
+  const sumSegW=segW.reduce((a,b)=>a+b,0), sumCylW=cylW.reduce((a,b)=>a+b,0);
+  const Wr=sumSegW+sumCylW;
+  const pn=k=>parseNum(P[k]);
+  const Ws=(pn('Wb')??NaN)-(pn('Wf')??NaN)-Wr-(pn('Wh')??NaN);
+  function ratio(c,D){ let base = c<=numCyl ? (c>D?0:1) : (D-numCyl)/(numSeg-numCyl); return base<=0?0:base; }
+  function cumFor(D){ const cum=[]; let s=0; for(let j=1;j<=numSeg;j++){ s+=calcLen[j-1]*ratio(j,D); cum[j]=s;} cum[numSeg+1]=cum[numSeg]; return cum; }
+  function d_of(D){ if(D<1||D>numSeg) return NaN; const cum=cumFor(D); let num=0;
+    for(let j=1;j<=numSeg;j++){ num+=(cum[j]-calcLen[j-1]/2)*segW[j-1]; }
+    for(let j=1;j<=numCyl;j++){ num+=((cum[j]-calcLen[j-1]+cum[j+1])/2)*cylW[j-1]; }
+    return num/(sumSegW+sumCylW); }
+  function equiv(D){ if(D<1||D>numSeg) return {wp1:NaN,wp2:NaN}; const cum=cumFor(D), dD=d_of(D); let wp1=0,wp2=0;
+    for(let j=1;j<=numSeg;j++){ const end=cum[j],start=cum[j]-calcLen[j-1];
+      const oh= end>=dD ? (start>dD? end-start : end-dD):0; wp1+=oh/calcLen[j-1]*segW[j-1]; }
+    for(let j=1;j<=numCyl;j++){ const start=cum[j]-calcLen[j-1],end=cum[j+1];
+      const oh= end>=dD ? (start>dD? end-start : end-dD):0; wp2+= (end-start)? oh/(end-start)*cylW[j-1]:0; }
+    return {wp1,wp2}; }
+  const idxOf = L => lengths.indexOf(Number(L))+1;
+  return {P,pn,lengths,segW,cylW,numSeg,numCyl,calcLen,Wr,Ws,d_of,equiv,idxOf,ratio,cumFor};
+}
+function rowCalc(E,row){
+  const L=Number(row.L), D=E.idxOf(L); const res={};
+  if(D<1){res.err=1; return res;}
+  res.d=E.d_of(D); const eq=E.equiv(D); res.O=(eq.wp1+eq.wp2)/1000;
+  const rNum=parseNum(row.r), WaNum=parseNum(row.Wa);
+  if(rNum==null) return res;
+  if(rNum>L){ res.theta='角度異常'; return res; }
+  res.theta=Math.acos(rNum/L)*180/Math.PI;
+  res.dcos=res.d*Math.cos(rad(res.theta));
+  const C=E.pn('Wh'), Ecol=E.Ws+E.pn('Wf'), F=E.Wr, G=E.pn('Lw');
+  const den=rNum-G/2;
+  // 作業半徑在外伸撐座支點以內：無前方翻倒之虞
+  if(den<=0){ res.K='無翻倒之虞'; res.norisk=true; return res; }
+  const Ko=(Ecol*G/2 - C*(G/2) - F*res.dcos)/den/1000;
+  if(!isFinite(Ko)) return res;
+  // Ko<0：伸臂自重力矩已大於車體穩定力矩（空載即翻倒），照常計算 SF 以顯示不合格
+  if(Ko<0) res.unstable=true;
+  res.K=Ko;
+  if(WaNum==null) return res;
+  res.Wo=Ko-(WaNum-C)/1000;
+  res.SF=(res.Wo+res.O+WaNum/1000)/(res.O+WaNum/1000);
+  return res;
+}
+
+/* =================== 計算彙整 =================== */
+function computeContext(){
+  const E=engine(), pn=E.pn;
+  const cosTm=Math.cos(rad(pn('thetaM')));
+  const d1=E.d_of(1), L1p=E.lengths[0], Bavg=(pn('B1')+pn('B2'))/2;
+  const L1=((E.Ws+pn('Wf'))*pn('B1')/2 + E.Wr*(d1*cosTm+pn('B1')/2) + pn('Wh')*(L1p*cosTm+pn('B1')/2))/pn('Wb');
+  const L2=((E.Ws*pn('H')/3)+pn('Wf')*pn('S')+E.Wr*(d1*cosTm+pn('S'))+pn('Wh')*(L1p*cosTm+pn('S')))/pn('Wb');
+  const hprime=(E.Ws*pn('h1')+pn('Wf')*pn('h2')+pn('Wh')*pn('h3')+E.Wr*pn('h4'))/(E.Ws+pn('Wf')+pn('Wh')+E.Wr);
+  const Lprime=Bavg/2;
+  const derived={Wr:E.Wr,Ws:E.Ws,L1p:L1p,d1:d1,Bavg:Bavg,hprime:hprime};
+  let worst=null,worstIdx=-1,worstSF=Infinity;
+  state.rows.forEach((row,i)=>{const c=rowCalc(E,row); if(c.SF!=null&&isFinite(c.SF)&&c.SF<worstSF){worstSF=c.SF;worstIdx=i;worst={...c,row};}});
+  return {E,pn,L1,L2,hprime,Lprime,Bavg,derived,worst,worstIdx};
+}
+
+/* =================== refresh：只更新輸出，不重建輸入欄位 =================== */
+function refresh(){
+  const ctx=computeContext();
+  paintMain(ctx); paintBoom(ctx); paintA3(ctx); paintA4(ctx);
+  save();
+}
+
+function paintMain(ctx){
+  const {pn,L1,L2,hprime,Lprime,Bavg,derived,worst}=ctx;
+  PARAM_DEFS.forEach(def=>{ if(!def[4]){ const el=document.getElementById('pin_'+def[3]);
+     if(el && el!==document.activeElement) el.value = fmt(derived[def[3]], def[2]==='kg'?0:3); } });
+  setTxt('r_L1',fmt(L1,4)); setTxt('r_B1',fmt(pn('B1'),1)); setTxt('r_L1B1',fmt(L1/pn('B1'),4));
+  badge('b_back1', L1/pn('B1'), 0.15, '≧ 0.15  OK！','＜ 0.15  不符規定！');
+  setTxt('r_L2',fmt(L2,4)); setTxt('r_B',fmt(Bavg,2)); setTxt('r_L2B',fmt(L2/Bavg,4));
+  badge('b_back2', L2/Bavg, 0.15, '≧ 0.15  OK！','＜ 0.15  不符規定！');
+  setTxt('r_Lp',fmt(Lprime,2)); setTxt('r_hp',fmt(hprime,3)); setTxt('r_side',fmt(Lprime*Math.sqrt(3)/hprime,4));
+  badge('b_side', Lprime*Math.sqrt(3)/hprime, 1, '≧ 1  OK！','＜ 1  不符規定！');
+  setTxt('r_hprime',fmt(hprime,3));
+  if(worst){
+    const Wp=worst.O, Wa=Number(worst.row.Wa)/1000, Wo=worst.Wo;
+    setTxt('worstNote','本機具最不利位置為：伸臂長度 '+worst.row.L+' cm、作業半徑 '+worst.row.r+' cm、吊升荷重 '+worst.row.Wa+' kg（詳附件4）');
+    setTxt('f_num',fmt(Wp,3)+' ＋ '+fmt(Wa,3)+' ＋ '+fmt(Wo,3));
+    setTxt('f_den',fmt(Wp,3)+' ＋ '+fmt(Wa,3));
+    // 與 Excel 主頁相同：分子之 Wp、Wo 四捨五入至小數 3 位，分母採未四捨五入之 Wp
+    const r3=v=>Math.round(v*1000)/1000, SFm=(r3(Wp)+Wa+r3(Wo))/(Wp+Wa);
+    setTxt('r_SF',fmt(SFm,4));
+    badge('b_front', SFm, 1.15, '≧ 1.15  OK！','＜ 1.15  不符規定！');
+  } else { setTxt('worstNote','（尚無有效資料，請於附件4 輸入或按「帶入參考數據」）');
+           setTxt('r_SF','-'); setTxt('f_num','-'); setTxt('f_den','-'); badge('b_front',NaN,1.15); }
+}
+
+/* =================== 參數輸入區（建立一次） =================== */
+function buildParams(){
+  const g=document.getElementById('paramGrid'); g.innerHTML='';
+  PARAM_DEFS.forEach((def,i)=>{
+    const [name,sym,unit,key,edit]=def;
+    const row=document.createElement('div'); row.className='prow'+(edit?'':' derived');
+    row.innerHTML=`<span class="no">${i+1}.</span><span>${name}</span>
+      <span class="sym">(${sym})</span>
+      <input type="number" step="any" id="pin_${key}" ${edit?'':'readonly'}>
+      <span class="unit">${unit}</span>`;
+    g.appendChild(row);
+    const inp=row.querySelector('input');
+    if(edit){ inp.value=state.params[key]==null?'':state.params[key];
+      inp.addEventListener('input',()=>{ state.params[key]= inp.value===''?'':parseFloat(inp.value); refresh(); }); }
+  });
+}
+
+/* =================== 附件1 伸臂輸入表（建立一次） =================== */
+function buildBoom(){
+  const B=state.boom, n=7;
+  const head=['項目'].concat(Array.from({length:n},(_,i)=>'第'+(i+1)+'節')).concat(['總和']);
+  let html='<tr>'+head.map(h=>'<th>'+h+'</th>').join('')+'</tr>';
+  const mkrow=(label,key,max)=>{ const arr=B[key]||[]; let r='<tr><td class="lbl">'+label+'</td>';
+    for(let i=0;i<n;i++){ if(i<max){ const v=(arr[i]==null?'':arr[i]); r+='<td><input type="number" step="any" data-bk="'+key+'" data-bi="'+i+'" value="'+v+'"></td>'; } else r+='<td class="na"></td>'; }
+    r+='<td class="out" id="bsum_'+key+'">-</td></tr>'; return r; };
+  html+=mkrow('伸臂長(cm)','lengths',7);
+  html+='<tr><td class="lbl">伸臂各節計算長度(cm)</td>'+Array.from({length:n},(_,i)=>'<td class="out" id="clen_'+i+'"></td>').join('')+'<td class="out" id="bsum_clen">-</td></tr>';
+  html+=mkrow('伸臂重量(kg)','segW',7);
+  html+=mkrow('油壓缸重量(kg)','cylW',6);
+  const t=document.getElementById('boomTable'); t.innerHTML=html;
+  t.querySelectorAll('input').forEach(inp=>inp.addEventListener('input',()=>{
+    const k=inp.dataset.bk,i=+inp.dataset.bi; if(!state.boom[k])state.boom[k]=[];
+    state.boom[k][i]= inp.value===''?'':parseFloat(inp.value);
+    buildA4();      // 節數/長度可能改變 → 重建附件4 結構（焦點在此表不受影響）
+    refresh();
+  }));
+}
+function paintBoom(ctx){
+  const E=ctx.E, num=k=>(state.boom[k]||[]).filter(x=>x!==''&&x!=null&&!isNaN(x)).map(Number);
+  for(let i=0;i<7;i++) setTxt('clen_'+i, i<E.numSeg ? trim(E.calcLen[i],2) : '');
+  setTxt('bsum_lengths', '');                                          // Excel：伸臂長度不加總
+  setTxt('bsum_clen', E.numSeg ? E.numSeg+' 節' : '-');                 // Excel L4：節數
+  const sw=num('segW'), cw=num('cylW');
+  setTxt('bsum_segW', sw.length ? trim(sw.reduce((a,b)=>a+b,0),2) : '-');
+  setTxt('bsum_cylW', cw.length ? trim(cw.reduce((a,b)=>a+b,0),2)+'（'+cw.length+' 支）' : '-');   // Excel L7、L8
+  paintDTable(E); paintA2(E);
+}
+function trim(v,n){ if(typeof v!=='number'||!isFinite(v)) return ''; return String(Number(v.toFixed(n))); }
+/* 附件1 明細：與 Excel「附件1 伸臂重心計算」相同，每個伸出狀態三列（伸出比例／伸臂重心位置／油壓缸重心位置）＋重心 d */
+function paintDTable(E){
+  const t=document.getElementById('dTable');
+  if(!E.numSeg){ t.innerHTML='<tr><td style="color:#999;padding:10px">請先於上表輸入伸臂資料。</td></tr>'; return; }
+  const n=7;
+  let html='<tr><th>伸出狀態</th><th>項目</th>'+Array.from({length:n},(_,i)=>'<th>第'+(i+1)+'節</th>').join('')+'<th>重心位置</th></tr>';
+  for(let D=1;D<=E.numSeg;D++){
+    const cum=E.cumFor(D), cells=(fn,max)=>Array.from({length:n},(_,i)=>{ const j=i+1; return j<=max ? '<td>'+trim(fn(j),4)+'</td>' : '<td class="na"></td>'; }).join('');
+    const dv=E.d_of(D);
+    html+='<tr><td class="grp" rowspan="3">伸出 '+D+' 節<br><small>伸臂長 '+trim(E.lengths[D-1],2)+' cm</small></td><td class="lbl">伸出比例</td>'+cells(j=>E.ratio(j,D),E.numSeg)
+        +'<td class="dcell" rowspan="3">'+D+'節重心(d'+D+')<br><span class="out">'+fmt(dv,3)+'</span> cm</td></tr>';
+    html+='<tr><td class="lbl">伸臂重心位置</td>'+cells(j=>cum[j]-E.calcLen[j-1]/2,E.numSeg)+'</tr>';
+    html+='<tr><td class="lbl">油壓缸重心位置</td>'+cells(j=>(cum[j]-E.calcLen[j-1]+cum[j+1])/2,E.numCyl)+'</tr>';
+  }
+  t.innerHTML=html;
+}
+function paintA2(E){
+  const n=7, ids=['a2W','a2Seg','a2Cyl','a2Table'];
+  if(!E.numSeg){ ids.forEach(id=>{ document.getElementById(id).innerHTML=''; }); document.getElementById('a2Table').innerHTML='<tr><td style="color:#999;padding:10px">請先於附件1 輸入伸臂資料。</td></tr>'; return; }
+  const sum=a=>a.reduce((x,y)=>x+y,0), col=(max,fn)=>Array.from({length:n},(_,i)=>i<max?'<td>'+fn(i+1)+'</td>':'<td class="na"></td>').join('');
+  // 重量（Excel 附件2 第 3～5 列）
+  let h='<tr><th>項目</th>'+Array.from({length:n},(_,i)=>'<th>第'+(i+1)+'節</th>').join('')+'<th>總和</th></tr>';
+  h+='<tr><td class="lbl">伸臂重量(kg)</td>'+col(E.numSeg,j=>trim(E.segW[j-1],2))+'<td class="out">'+trim(sum(E.segW),2)+'</td></tr>';
+  h+='<tr><td class="lbl">油壓缸重量(kg)</td>'+col(E.numCyl,j=>trim(E.cylW[j-1],2))+'<td class="out">'+(E.numCyl?trim(sum(E.cylW),2):'-')+'</td></tr>';
+  document.getElementById('a2W').innerHTML=h;
+  const over=(s,e,d)=> e>=d ? (s>d ? e-s : e-d) : 0;
+  // 伸臂（Excel 第 6～28 列）
+  let hs='<tr><th>伸出狀態</th><th>項目</th>'+Array.from({length:n},(_,i)=>'<th>第'+(i+1)+'節</th>').join('')+'<th>伸臂重量中之前端等價質量</th></tr>';
+  let hc='<tr><th>伸出狀態</th><th>項目</th>'+Array.from({length:6},(_,i)=>'<th>第'+(i+1)+'支</th>').join('')+'<th>油壓缸重量中之前端等價質量</th></tr>';
+  for(let D=1;D<=E.numSeg;D++){
+    const cum=E.cumFor(D), d=E.d_of(D), eq=E.equiv(D);
+    const st=j=>cum[j]-E.calcLen[j-1], en=j=>cum[j], ce=j=>cum[j+1];
+    hs+='<tr><td class="grp" rowspan="3">伸出 '+D+' 節<br><small>d'+D+' ＝ '+fmt(d,3)+' cm</small></td><td class="lbl">伸出'+D+'節時起點</td>'+col(E.numSeg,j=>trim(st(j),4))+'<td class="dcell" rowspan="3">'+D+'節時前端等價質量<br>Wp′ ＝ <span class="out">'+fmt(eq.wp1,3)+'</span> kg</td></tr>';
+    hs+='<tr><td class="lbl">伸出'+D+'節時終點</td>'+col(E.numSeg,j=>trim(en(j),4))+'</tr>';
+    hs+='<tr><td class="lbl">伸臂超出重心之長度</td>'+col(E.numSeg,j=>trim(over(st(j),en(j),d),4))+'</tr>';
+    const c6=(fn)=>Array.from({length:6},(_,i)=>i<E.numCyl?'<td>'+fn(i+1)+'</td>':'<td class="na"></td>').join('');
+    hc+='<tr><td class="grp" rowspan="3">伸出 '+D+' 節<br><small>d'+D+' ＝ '+fmt(d,3)+' cm</small></td><td class="lbl">伸出'+D+'節時起點</td>'+c6(j=>trim(st(j),4))+'<td class="dcell" rowspan="3">'+D+'節時前端等價質量<br>Wp″ ＝ <span class="out">'+fmt(eq.wp2,3)+'</span> kg</td></tr>';
+    hc+='<tr><td class="lbl">伸出'+D+'節時終點</td>'+c6(j=>trim(ce(j),4))+'</tr>';
+    hc+='<tr><td class="lbl">超出重心之長度</td>'+c6(j=>trim(over(st(j),ce(j),d),4))+'</tr>';
+  }
+  document.getElementById('a2Seg').innerHTML=hs;
+  document.getElementById('a2Cyl').innerHTML=E.numCyl?hc:'<tr><td style="color:#999;padding:10px">未輸入油壓缸重量。</td></tr>';
+  // 彙整
+  let html='<tr><th>伸出狀態</th><th>伸臂長度(cm)</th><th>前端等價質量 Wp′ (kg)</th><th>油壓缸前端等價質量 Wp″ (kg)</th><th>伸臂重量中之前端等價質量 Wp (公噸)</th></tr>';
+  for(let D=1;D<=E.numSeg;D++){ const q=E.equiv(D);
+    html+='<tr><td>伸出 '+D+' 節</td><td>'+E.lengths[D-1]+'</td><td class="out">'+fmt(q.wp1,3)+'</td><td class="out">'+fmt(q.wp2,3)+'</td><td class="out">'+fmt((q.wp1+q.wp2)/1000,4)+'</td></tr>';
+  }
+  document.getElementById('a2Table').innerHTML=html;
+}
+
+/* =================== 附件3（建立一次） =================== */
+function buildA3(){
+  let html='<tr><th>項目</th><th>符號</th><th>數值</th><th>單位</th></tr>';
+  A3_DEFS.forEach(def=>{ const [name,sym,unit,key,edit]=def;
+    if(edit) html+='<tr><td class="lbl">'+name+'</td><td>'+sym+'</td><td><input type="number" step="any" id="a3in_'+key+'" value="'+(state.params[key]==null?'':state.params[key])+'"></td><td>'+unit+'</td></tr>';
+    else html+='<tr><td class="lbl">'+name+'</td><td>'+sym+'</td><td><span class="out" id="a3o_'+key+'">-</span></td><td>'+unit+'</td></tr>';
+  });
+  document.getElementById('a3Table').innerHTML=html;
+  A3_DEFS.forEach(def=>{ if(def[4]){ const inp=document.getElementById('a3in_'+def[3]);
+    if(inp) inp.addEventListener('input',()=>{ state.params[def[3]]= inp.value===''?'':parseFloat(inp.value); refresh(); }); }});
+}
+function paintA3(ctx){ const E=ctx.E;
+  const lut={Ws:E.Ws, Wr:E.Wr, Wf:E.pn('Wf'), Wh:E.pn('Wh')};
+  A3_DEFS.forEach(def=>{ if(!def[4]) setTxt('a3o_'+def[3], fmt(lut[def[3]], def[2]==='kg'?0:3)); });
+}
+
+/* =================== 附件4（結構在新增/刪除/切換時重建；輸入時只更新輸出） =================== */
+const A4HEADS=['吊升荷重<br>Wa(kg)','吊具組<br>Wh(kg)','作業半徑<br>r(cm)','起重機本體重<br>Ws+Wf(kg)','伸臂自重<br>Wr(kg)','外伸腳距離<br>Lw(cm)','作業角度<br>θ(度)','伸臂水平重心<br>d(cm)','d×cosθ<br>(cm)','翻倒負荷<br>Wo′(公噸)','安定餘裕<br>Wo(公噸)','前端等價質量<br>Wp(公噸)','前方安定度<br>SF','刪除'];
+function rowClass(i,c,worstIdx){ return i===worstIdx?'worst':(c.norisk?'norisk':''); }
+function a4RowHtml(i,row,E,worstIdx){ const c=rowCalc(E,row);
+  return '<tr id="a4tr_'+i+'" class="'+rowClass(i,c,worstIdx)+'">'
+   +'<td><input type="number" step="any" data-ri="'+i+'" data-rk="Wa" value="'+(row.Wa==null?'':row.Wa)+'"></td>'
+   +'<td class="out" id="a4o_'+i+'_Wh">'+fmt(E.pn('Wh'),0)+'</td>'
+   +'<td><input type="number" step="any" data-ri="'+i+'" data-rk="r" value="'+(row.r==null?'':row.r)+'"></td>'
+   +'<td class="out" id="a4o_'+i+'_EwWf">'+fmt(E.Ws+E.pn('Wf'),0)+'</td>'
+   +'<td class="out" id="a4o_'+i+'_Wr">'+fmt(E.Wr,0)+'</td>'
+   +'<td class="out" id="a4o_'+i+'_Lw">'+fmt(E.pn('Lw'),0)+'</td>'
+   +'<td class="out" id="a4o_'+i+'_theta">'+fmt(c.theta,2)+'</td>'
+   +'<td class="out" id="a4o_'+i+'_d">'+fmt(c.d,2)+'</td>'
+   +'<td class="out" id="a4o_'+i+'_dcos">'+fmt(c.dcos,2)+'</td>'
+   +'<td class="out" id="a4o_'+i+'_K">'+fmt(c.K,3)+'</td>'
+   +'<td class="out" id="a4o_'+i+'_Wo">'+fmt(c.Wo,3)+'</td>'
+   +'<td class="out" id="a4o_'+i+'_O">'+fmt(c.O,4)+'</td>'
+   +'<td class="out" id="a4o_'+i+'_SF">'+fmt(c.SF,3)+'</td>'
+   +'<td class="no-print"><span class="del" data-del="'+i+'">✕</span></td></tr>';
+}
+function buildA4(){
+  const t=document.getElementById('a4Table'); const E=engine(); const NC=A4HEADS.length;
+  let html='<tr>'+A4HEADS.map(h=>'<th>'+h+'</th>').join('')+'</tr>';
+  let worstIdx=-1,worstSF=Infinity;
+  state.rows.forEach((row,i)=>{ const c=rowCalc(E,row); if(c.SF!=null&&isFinite(c.SF)&&c.SF<worstSF){worstSF=c.SF;worstIdx=i;} });
+  if(!E.numSeg){ html+='<tr><td colspan="'+NC+'" style="color:#888;padding:16px">請先於附件1 輸入伸臂長度，或按上方「帶入參考數據」。</td></tr>'; t.innerHTML=html; return; }
+  E.lengths.forEach(Lval=>{
+    html+='<tr class="sec"><td colspan="'+NC+'" class="secheader">伸臂長度 <b>'+Lval+'</b> cm'
+      +'<button class="btn-add-sm no-print" data-addl="'+Lval+'">＋ 新增列</button></td></tr>';
+    const items=state.rows.map((row,i)=>({row,i})).filter(x=>Number(x.row.L)===Number(Lval));
+    if(!items.length){ html+='<tr><td colspan="'+NC+'" style="color:#aaa;padding:8px">（尚無資料，請按「＋ 新增列」）</td></tr>'; }
+    items.forEach(({row,i})=>{ html+=a4RowHtml(i,row,E,worstIdx); });
+  });
+  t.innerHTML=html;
+  t.querySelectorAll('input[data-rk]').forEach(el=>el.addEventListener('input',()=>{
+    const i=+el.dataset.ri,k=el.dataset.rk; state.rows[i][k]= el.value===''?'':parseFloat(el.value); refresh(); }));
+  t.querySelectorAll('[data-del]').forEach(x=>x.addEventListener('click',()=>{ state.rows.splice(+x.dataset.del,1); buildA4(); refresh(); }));
+  t.querySelectorAll('[data-addl]').forEach(b=>b.addEventListener('click',()=>{ state.rows.push({L:Number(b.dataset.addl),Wa:'',r:''}); buildA4(); refresh(); }));
+}
+function paintA4(ctx){ const E=ctx.E, worstIdx=ctx.worstIdx;
+  state.rows.forEach((row,i)=>{ const tr=document.getElementById('a4tr_'+i); if(!tr)return;
+    const c=rowCalc(E,row); tr.className=rowClass(i,c,worstIdx);
+    setTxt('a4o_'+i+'_Wh',fmt(E.pn('Wh'),0));
+    setTxt('a4o_'+i+'_EwWf',fmt(E.Ws+E.pn('Wf'),0));
+    setTxt('a4o_'+i+'_Wr',fmt(E.Wr,0));
+    setTxt('a4o_'+i+'_Lw',fmt(E.pn('Lw'),0));
+    setTxt('a4o_'+i+'_theta',fmt(c.theta,2));
+    setTxt('a4o_'+i+'_d',fmt(c.d,2));
+    setTxt('a4o_'+i+'_dcos',fmt(c.dcos,2));
+    setTxt('a4o_'+i+'_K',fmt(c.K,3));
+    setTxt('a4o_'+i+'_Wo',fmt(c.Wo,3));
+    setTxt('a4o_'+i+'_O',fmt(c.O,4));
+    setTxt('a4o_'+i+'_SF',fmt(c.SF,3));
+  });
+}
+
+/* =================== 儲存 / 載入 / 切換 =================== */
+function save(){ try{localStorage.setItem(LSK,JSON.stringify(state));}catch(e){} }
+function load(){ try{const s=localStorage.getItem(LSK);return s?JSON.parse(s):null;}catch(e){return null;} }
+function saveLocal(){ save(); alert('已儲存到此瀏覽器（下次開啟自動載入）。'); }
+function buildAll(){ buildParams(); buildBoom(); buildA3(); buildA4(); refresh(); }
+function applyState(s){ state=clone(s); buildAll(); }
+function clearAll(){ if(!confirm('確定清空所有輸入欄位？'))return; localStorage.removeItem(LSK); applyState(EMPTY_STATE); }
+
+/* =================== 啟動 =================== */
+buildAll();
+</script>
+</body>
+</html>

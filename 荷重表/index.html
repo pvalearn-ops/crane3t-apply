@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <script src="../shared/case-bridge.js"></script>
+<meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>起重機吊升荷重表產生器</title>
+  <link rel="stylesheet" href="style.css?v=20261004v">
+</head>
+<body>
+
+  <!-- 頂部操作工具列 (列印時自動隱藏) -->
+  <header class="no-print app-header" style="display:none">
+    <div class="header-container">
+      <div class="brand">
+        <span class="icon">🏗️</span>
+        <div>
+          <h1>起重機吊升荷重表編輯器</h1>
+          <p class="subtitle">可自訂伸臂長度、作業半徑與數據，支援快速編輯與 A4 高清列印</p>
+        </div>
+      </div>
+      <div class="actions">
+        <button id="btnPrint" class="btn btn-primary">
+          <span class="btn-icon">🖨️</span> 列印 / 另存 PDF
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="main-wrapper">
+    <!-- 控制面板 (列印時自動隱藏) -->
+    <section class="control-panel no-print">
+      <div class="control-group">
+        <label class="group-title">📐 伸臂長度 (欄位控制)</label>
+        <div class="btn-row">
+          <button id="btnAddCol" class="btn btn-secondary" title="在右側新增一欄伸臂">
+            ➕ 新增伸臂欄位
+          </button>
+          <button id="btnRemoveCol" class="btn btn-danger-outline" title="刪除最右側一欄">
+            ➖ 刪除最後一欄
+          </button>
+        </div>
+      </div>
+
+      <div class="control-group">
+        <label class="group-title">📏 作業半徑 (列控制)</label>
+        <div class="btn-row">
+          <button id="btnAddRow" class="btn btn-secondary" title="在下方新增一列半徑">
+            ➕ 新增半徑列
+          </button>
+          <button id="btnRemoveRow" class="btn btn-danger-outline" title="刪除最下方一列">
+            ➖ 刪除最後一列
+          </button>
+          <button id="btnBatchRadius" class="btn btn-outline" title="批次設定半徑範圍">
+            ⚡ 批次生成半徑
+          </button>
+        </div>
+      </div>
+
+      <div class="control-group">
+        <label class="group-title">⚙️ 儲存與範本</label>
+        <div class="btn-row">
+          <button id="btnLoadPreset" class="btn btn-outline" title="載入標準數據範本">
+            🔄 載入預設範本
+          </button>
+          <button id="btnClearData" class="btn btn-danger-outline" title="清空所有荷重格內容">
+            🧹 清空內容
+          </button>
+          <button id="btnExportJson" class="btn btn-outline" title="下載 JSON 備份檔">
+            💾 匯出設定
+          </button>
+          <label class="btn btn-outline file-btn" title="上傳 JSON 檔恢復數據">
+            📂 匯入設定
+            <input type="file" id="fileImportJson" accept=".json" style="display:none;">
+          </label>
+        </div>
+      </div>
+
+      <div class="control-group quick-tips">
+        <label class="group-title">💡 快捷提示</label>
+        <ul class="tips-list">
+          <li>雙擊或點擊格子中的 <b>「斜線」按鈕</b> 即可快速切換斜線 (無法作業區間)。</li>
+          <li>支援多行輸入（例如：<code>2240</code> 下方換行 <code>(4.57m)</code>）。</li>
+          <li>表格名稱、鋼索掛數與底部備註皆可直接點擊編輯。</li>
+          <li>系統會即時將修改自動儲存在瀏覽器中。</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- 荷重表主體 (A4 列印區域) -->
+    <div class="paper-container">
+      <div id="printArea" class="printable-sheet">
+        
+        <!-- 表格頂部標題區 -->
+        <div class="sheet-header">
+          <div class="model-title-box">
+            <input type="text" id="inputDocTitle" class="editable-title table-title-input" value="吊升荷重表" placeholder="表格名稱">
+          </div>
+          <div class="unit-box">
+            <label>單位：</label>
+            <input type="text" id="inputUnit" class="editable-unit" value="kg" placeholder="kg">
+          </div>
+        </div>
+
+        <!-- 荷重表核心表格 -->
+        <div class="table-responsive">
+          <table id="loadTable" class="load-table">
+            <thead>
+              <!-- 第一列：左上角表頭 + 伸臂長度標題 -->
+              <tr class="header-row-top">
+                <th id="cornerHeader" rowspan="2" class="corner-header-cell">
+                  <div class="diagonal-split">
+                    <span class="top-text">吊桿長度 (m)</span>
+                    <div class="split-line"></div>
+                    <span class="bottom-text">作業半徑 (m)</span>
+                  </div>
+                </th>
+                <th id="boomHeaderSuper" class="boom-super-header" colspan="5">
+                  吊桿長度 (m)
+                </th>
+              </tr>
+              <!-- 第二列：各伸臂長度數值 -->
+              <tr id="boomLengthsRow" class="boom-values-row">
+                <!-- 動態生成的伸臂長度欄位 -->
+              </tr>
+            </thead>
+            <tbody id="tableBody">
+              <!-- 動態生成的各作業半徑列與荷重數據 -->
+            </tbody>
+            <tfoot>
+              <!-- 底部鋼索掛數列 -->
+              <tr id="ropeRow" class="rope-row">
+                <th class="rope-title-cell">
+                  <input type="text" class="cell-input text-bold" value="鋼索掛數">
+                </th>
+                <!-- 動態生成的鋼索掛數欄位 -->
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+
+        <!-- 表格底部注意事項 -->
+        <div class="sheet-footer">
+          <div class="notes-container">
+            <span class="note-label">注意：</span>
+            <input type="text" id="inputNotes" class="editable-notes" value="本性能表只限用於外撐伸座最大張出之側及後方。">
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  <!-- 批次生成半徑對話框 Modal -->
+  <dialog id="batchModal" class="modal-dialog">
+    <div class="modal-content">
+      <h3>⚡ 批次設定作業半徑</h3>
+      <div class="modal-body">
+        <div class="form-row">
+          <label>起始半徑 (m)：</label>
+          <input type="number" id="modalRadiusStart" value="2" step="0.5" min="0">
+        </div>
+        <div class="form-row">
+          <label>結束半徑 (m)：</label>
+          <input type="number" id="modalRadiusEnd" value="17" step="0.5" min="0">
+        </div>
+        <div class="form-row">
+          <label>遞增間距 (m)：</label>
+          <input type="number" id="modalRadiusStep" value="1" step="0.1" min="0.1">
+        </div>
+        <div class="form-row">
+          <label>額外包含特殊半徑 (以逗號分隔)：</label>
+          <input type="text" id="modalRadiusExtra" value="17.3" placeholder="例如: 17.3, 18.5">
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button id="btnCancelBatch" class="btn btn-outline">取消</button>
+        <button id="btnConfirmBatch" class="btn btn-primary">確認生成</button>
+      </div>
+    </div>
+  </dialog>
+
+  <script src="app.js?v=20261004v"></script>
+</body>
+</html>

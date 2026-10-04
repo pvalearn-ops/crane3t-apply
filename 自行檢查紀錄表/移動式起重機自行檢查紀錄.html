@@ -1,0 +1,2440 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <script src="../shared/case-bridge.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>移動式起重機自行檢查紀錄</title>
+<style>
+  :root {
+    --primary-color: #1a4fa0;
+    --primary-dark: #0f3570;
+    --primary-light: #e9eef7;
+    --text-color: #000000;
+    --border-color: #000000;
+    --bg-page: #eaecf0;
+    --card-bg: #ffffff;
+    --accent-yellow: #ffc107;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: "Microsoft JhengHei", "PingFang TC", "Noto Sans TC", "PMingLiU", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: var(--bg-page);
+    color: var(--text-color);
+    font-size: 13px;
+    line-height: 1.45;
+  }
+
+  /* ===== 頂部工具列 (螢幕顯示，列印時隱藏) ===== */
+  .toolbar {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    background: linear-gradient(135deg, #1a4fa0, #0d2b5c);
+    color: #ffffff;
+    padding: 10px 18px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.25);
+  }
+
+  .toolbar-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 16px;
+    font-weight: bold;
+    letter-spacing: 1px;
+  }
+
+  .toolbar-badge {
+    background: rgba(255,255,255,0.22);
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-weight: normal;
+  }
+
+  .toolbar-buttons {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: #ffffff;
+    color: var(--primary-color);
+    border: none;
+    border-radius: 4px;
+    padding: 6px 12px;
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: inherit;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+    user-select: none;
+  }
+
+  .btn:hover {
+    background: #dbe6fb;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  }
+
+  .btn:active {
+    transform: translateY(0);
+  }
+
+  .btn-primary {
+    background: #ffcc00;
+    color: #3e2e00;
+  }
+  .btn-primary:hover {
+    background: #ffdb4d;
+  }
+
+  .btn-success {
+    background: #4caf50;
+    color: #ffffff;
+  }
+  .btn-success:hover {
+    background: #5cbf60;
+  }
+
+  .btn-danger {
+    background: #f44336;
+    color: #ffffff;
+  }
+  .btn-danger:hover {
+    background: #e57373;
+  }
+
+  .btn-outline {
+    background: rgba(255,255,255,0.15);
+    color: #ffffff;
+    border: 1px solid rgba(255,255,255,0.4);
+  }
+  .btn-outline:hover {
+    background: rgba(255,255,255,0.3);
+  }
+
+  .status-toast {
+    font-size: 12px;
+    color: #a3e635;
+    margin-left: 6px;
+    transition: opacity 0.3s;
+    font-weight: normal;
+  }
+
+  /* ===== 主容器 ===== */
+  .container {
+    max-width: 990px;
+    margin: 18px auto;
+    padding: 0 12px 40px;
+  }
+
+  .notice-banner {
+    background: #fff8e1;
+    border-left: 4px solid #ffb300;
+    padding: 8px 14px;
+    margin-bottom: 14px;
+    border-radius: 4px;
+    font-size: 12.5px;
+    color: #6a4a00;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  }
+
+  .notice-banner strong {
+    color: #b26a00;
+  }
+
+  .batch-chips {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .chip-btn {
+    background: #ffffff;
+    border: 1px solid #d4a017;
+    color: #8c5b00;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 11.5px;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-weight: 500;
+  }
+  .chip-btn:hover {
+    background: #ffe082;
+    color: #4e3400;
+  }
+
+  /* ===== 表單頁面 ===== */
+  .form-page {
+    background: #ffffff;
+    padding: 24px 28px 20px;
+    box-shadow: 0 3px 14px rgba(0,0,0,0.12);
+    border-radius: 4px;
+    box-sizing: border-box;
+    width: 100%;
+    margin: 0 auto;
+  }
+
+  /* 標題 */
+  .doc-header {
+    text-align: center;
+    margin-bottom: 10px;
+    position: relative;
+  }
+
+  .doc-title {
+    font-size: 22px;
+    font-weight: bold;
+    letter-spacing: 4px;
+    margin: 0 0 4px 0;
+    color: #000000;
+  }
+
+  /* ===== 表格樣式 ===== */
+  table.sheet-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: -1px;
+    border: 1.5px solid #000000;
+  }
+
+  table.sheet-table + table.sheet-table {
+    border-top: none;
+  }
+
+  table.sheet-table th,
+  table.sheet-table td {
+    border: 1px solid #000000;
+    padding: 3.5px 5px;
+    font-size: 12px;
+    vertical-align: middle;
+    line-height: 1.4;
+  }
+
+  .th-label {
+    background-color: #f7f9fc;
+    font-weight: 600;
+    text-align: center;
+    color: #000000;
+    white-space: nowrap;
+  }
+
+  .v-header {
+    width: 24px;
+    text-align: center;
+    font-weight: bold;
+    background-color: #f7f9fc;
+    line-height: 1.3;
+    padding: 4px 2px;
+    letter-spacing: 1px;
+    word-break: break-all;
+    vertical-align: middle;
+  }
+
+  .sub-category {
+    font-weight: 600;
+    background-color: #fafbfc;
+    width: 120px;
+    min-width: 110px;
+    text-align: center;
+    vertical-align: middle;
+    padding: 3px 3px;
+  }
+
+  .desc-cell {
+    vertical-align: middle;
+    line-height: 1.65;
+  }
+
+  .desc-p {
+    margin: 1.5px 0;
+    line-height: 1.65;
+  }
+
+  .nowrap-line {
+    white-space: nowrap;
+  }
+
+  .result-col {
+    width: 85px;
+    min-width: 80px;
+    text-align: center;
+    vertical-align: middle;
+    padding: 2px 3px;
+  }
+
+  /* ===== 基本欄位輸入框 (全寬) ===== */
+  .full-input {
+    width: 100%;
+    border: 1px solid #ccd5e0;
+    background: #ffffff;
+    padding: 3px 5px;
+    font-size: 12px;
+    font-family: inherit;
+    color: #002266;
+    font-weight: 500;
+    outline: none;
+    box-sizing: border-box;
+    border-radius: 3px;
+    transition: all 0.15s;
+  }
+
+  .full-input:hover {
+    border-color: #8da4c4;
+    background-color: #fcfdff;
+  }
+
+  .full-input:focus {
+    border-color: #1a4fa0;
+    background-color: #f0f6ff;
+    box-shadow: 0 0 0 2px rgba(26,79,160,0.18);
+  }
+
+  /* ===== 關鍵：行內填空輸入框 (緊湊壓縮、禁止自動換列) ===== */
+  input[type="text"].inline-input,
+  input.inline-input {
+    display: inline-block !important;
+    width: auto !important;
+    height: 19px !important;
+    line-height: 19px !important;
+    border: none !important;
+    border-bottom: 1px solid #222222 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    padding: 0 2px !important;
+    margin: 0 1px !important;
+    font-size: 12px !important;
+    font-family: inherit !important;
+    color: #002266 !important;
+    font-weight: bold !important;
+    text-align: center !important;
+    vertical-align: baseline !important;
+    outline: none !important;
+    box-sizing: border-box !important;
+    transition: border-color 0.15s, background-color 0.15s !important;
+  }
+
+  input[type="text"].inline-input:hover,
+  input.inline-input:hover {
+    border-bottom: 1.5px solid #1a4fa0 !important;
+    background-color: #f0f7ff !important;
+  }
+
+  input[type="text"].inline-input:focus,
+  input.inline-input:focus {
+    border-bottom: 2px solid #1a4fa0 !important;
+    background-color: #e3effd !important;
+  }
+
+  /* 精準緊湊寬度控制 */
+  .w-num-xs { width: 28px !important; min-width: 28px !important; max-width: 28px !important; } /* 1~2個數字 (如：股、支、度) */
+  .w-num-sm { width: 38px !important; min-width: 38px !important; max-width: 42px !important; } /* 2~3位數字 (如：mm、直徑、KW) */
+  .w-num-md { width: 50px !important; min-width: 50px !important; max-width: 55px !important; } /* 3~4位數字 (如：斷面、長度、節距) */
+  .w-num-lg { width: 75px !important; min-width: 75px !important; } /* 較長數字/文字 */
+
+  /* ===== 檢查結果輸入格 ===== */
+  .result-input-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+  }
+
+  .result-input {
+    width: 100% !important;
+    text-align: center !important;
+    font-weight: bold !important;
+    border: 1px solid #ccd5e0 !important;
+    border-radius: 3px !important;
+    padding: 2px 1px !important;
+    font-size: 11.5px !important;
+    color: #111111 !important;
+    background: #ffffff !important;
+    box-sizing: border-box !important;
+    height: 22px !important;
+  }
+
+  .result-input:focus {
+    border-color: #1a4fa0 !important;
+    background: #f0f6ff !important;
+  }
+
+  /* 快速標籤列 (點擊選單) */
+  .quick-pill-menu {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: -10px;
+    right: -10px;
+    background: #ffffff;
+    border: 1px solid #90caf9;
+    border-radius: 4px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.18);
+    z-index: 100;
+    padding: 4px 2px;
+    flex-wrap: wrap;
+    gap: 2px;
+    justify-content: center;
+  }
+
+  .result-input-wrap:focus-within .quick-pill-menu,
+  .quick-pill-menu:hover {
+    display: flex;
+  }
+
+  .quick-pill {
+    font-size: 11px;
+    padding: 1px 4px;
+    background: #e3f2fd;
+    color: #1565c0;
+    border-radius: 3px;
+    cursor: pointer;
+    user-select: none;
+  }
+  .quick-pill:hover {
+    background: #1976d2;
+    color: #ffffff;
+  }
+
+  /* 核選標籤 */
+  .chk-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    cursor: pointer;
+    font-size: 12px;
+    user-select: none;
+    margin-right: 4px;
+    vertical-align: middle;
+  }
+
+  .chk-label input[type="checkbox"] {
+    cursor: pointer;
+    margin: 0;
+    accent-color: #1a4fa0;
+  }
+
+  /* ===== 簽章區域 (大幅加高供實體蓋章用) ===== */
+  .sign-cell {
+    height: 105px !important;
+    min-height: 105px !important;
+    vertical-align: top !important;
+    padding: 8px 10px !important;
+    box-sizing: border-box !important;
+  }
+
+  .sign-label {
+    font-weight: 600;
+    color: #000000;
+    font-size: 13px;
+    margin-bottom: 6px;
+  }
+
+  .sign-input-container {
+    height: 65px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .sign-input {
+    border: 1px dashed #b8cde8 !important;
+    background: #fbfdff !important;
+    text-align: center !important;
+    font-size: 12px;
+    padding: 6px 8px !important;
+  }
+  .sign-input:focus {
+    border: 1.5px solid #1a4fa0 !important;
+    background: #ffffff !important;
+  }
+
+  /* 頁尾編號 */
+  .footer-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+    margin-top: 4px;
+    color: #333333;
+    padding: 0 2px;
+  }
+
+  .footer-code {
+    font-weight: 500;
+    letter-spacing: 0.5px;
+  }
+
+  /* ===== 列印專用樣式 (@media print) ===== */
+  @page {
+    size: A4 portrait;
+    margin: 8mm 8mm 8mm 8mm;
+  }
+
+  @media print {
+    * {
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+
+    body {
+      background: #ffffff !important;
+      font-size: 9.5px !important;
+      color: #000000 !important;
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+
+    .toolbar,
+    .no-print,
+    .notice-banner,
+    .quick-pill-menu,
+    .batch-chips {
+      display: none !important;
+    }
+
+    .container {
+      max-width: 100% !important;
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+
+    .form-page {
+      box-shadow: none !important;
+      border: none !important;
+      padding: 0 !important;
+      margin: 0 !important;
+      width: 100% !important;
+    }
+
+    .doc-title {
+      font-size: 16px !important;
+      margin-bottom: 4px !important;
+      letter-spacing: 3px !important;
+    }
+
+    table.sheet-table {
+      border: 1.2px solid #000000 !important;
+      page-break-inside: auto;
+    }
+
+    table.sheet-table tr {
+      page-break-inside: avoid;
+      page-break-after: auto;
+    }
+
+    table.sheet-table th,
+    table.sheet-table td {
+      border: 0.8px solid #000000 !important;
+      padding: 2px 3.5px !important;
+      font-size: 9px !important;
+      line-height: 1.3 !important;
+    }
+
+    .th-label, .v-header, .sub-category {
+      background-color: #f2f2f2 !important;
+    }
+
+    .full-input {
+      border: none !important;
+      background: transparent !important;
+      color: #000000 !important;
+      font-size: 9px !important;
+      padding: 0 !important;
+      box-shadow: none !important;
+      font-weight: bold !important;
+    }
+
+    input[type="text"].inline-input,
+    input.inline-input {
+      border: none !important;
+      border-bottom: 0.8px solid #000000 !important;
+      background: transparent !important;
+      color: #000000 !important;
+      font-size: 9px !important;
+      padding: 0 !important;
+      height: 14px !important;
+      line-height: 14px !important;
+    }
+
+    .result-input {
+      border: none !important;
+      background: transparent !important;
+      font-size: 9px !important;
+      font-weight: bold !important;
+      text-align: center !important;
+      padding: 0 !important;
+    }
+
+    .sign-cell {
+      height: 80px !important;
+      min-height: 80px !important;
+      padding: 4px 6px !important;
+      vertical-align: top !important;
+    }
+
+    .sign-label {
+      font-size: 9.5px !important;
+      margin-bottom: 2px !important;
+    }
+
+    .footer-bar {
+      font-size: 8.5px !important;
+      margin-top: 2px !important;
+    }
+  }
+</style>
+</head>
+<body>
+
+<!-- 主容器 -->
+<div class="container">
+  
+  <!-- 提示與快速填入列 -->
+  <div class="notice-banner no-print">
+    <div>
+      💡 <strong>填寫說明：</strong>請依實際檢查結果<b>逐項</b>點選「檢查結果紀要」：按一下為「V」，再按一下變「/」，循環切換。
+    </div>
+  </div>
+
+  <!-- 表單頁面 -->
+  <div class="form-page" id="printableForm">
+    
+    <!-- 標題 -->
+    <div class="doc-header">
+      <h1 class="doc-title">移動式起重機自行檢查紀錄</h1>
+    </div>
+
+    <!-- 表頭基本資料表 -->
+    <table class="sheet-table">
+      <colgroup>
+        <col style="width: 14%;">
+        <col style="width: 36%;">
+        <col style="width: 14%;">
+        <col style="width: 36%;">
+      </colgroup>
+      <tbody>
+        <tr>
+          <td class="th-label">事業單位名稱</td>
+          <td>
+            <input type="text" class="full-input" id="company_name" placeholder="請輸入事業單位名稱">
+          </td>
+          <td class="th-label">機械編號</td>
+          <td>
+            <div style="min-height:22px"></div>
+          </td>
+        </tr>
+        <tr>
+          <td class="th-label">事業單位地址</td>
+          <td>
+            <input type="text" class="full-input" id="company_address" placeholder="請輸入事業單位地址">
+          </td>
+          <td class="th-label">打印號碼</td>
+          <td>
+            <div style="min-height:22px"></div>
+          </td>
+        </tr>
+        <tr>
+          <td class="th-label">型式</td>
+          <td>
+            <input type="text" class="full-input" id="machine_type" placeholder="例如：伸臂式 / 輪胎式 / 履帶式">
+          </td>
+          <td class="th-label">吊升荷重</td>
+          <td>
+            <div style="display: flex; align-items: center; gap: 4px;">
+              <input type="text" class="inline-input w-num-md" id="hoisting_capacity" placeholder="2.93">
+              <span>公噸</span>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- 檢查項目大表 -->
+    <table class="sheet-table" id="inspectionTable">
+      <colgroup>
+        <col style="width: 24px;"> <!-- 大項 (垂直) -->
+        <col style="width: 120px;"> <!-- 次項目 -->
+        <col style="width: auto;"> <!-- 法規內容 / 實測數據 -->
+        <col style="width: 85px;"> <!-- 檢查結果紀要 -->
+      </colgroup>
+      <thead>
+        <tr>
+          <th class="th-label" colspan="2" style="padding: 5px;">檢 查 項 目</th>
+          <th class="th-label" style="padding: 5px;">法規內容/實測數據</th>
+          <th class="th-label" style="padding: 5px;">檢查結果紀要</th>
+        </tr>
+      </thead>
+      <tbody>
+
+        <!-- ==================== 一、結構部分 (30 items) ==================== -->
+        <!-- 1. 伸臂 (9 rows) -->
+        <tr>
+          <td class="v-header" rowspan="30">一<br>、<br>結<br>構<br>部<br>分</td>
+          <td class="sub-category" rowspan="9">1.伸臂</td>
+          <td class="desc-cell">(1)主伸臂無顯著裂痕、變形、損傷及腐蝕。</td>
+          <td class="result-col">
+            <div class="result-input-wrap">
+              <input type="text" class="result-input" data-key="res_1_1_1" placeholder="結果">
+              <div class="quick-pill-menu no-print">
+                <span class="quick-pill" onclick="setVal(this,'良好')">良好</span>
+                <span class="quick-pill" onclick="setVal(this,'正常')">正常</span>
+                <span class="quick-pill" onclick="setVal(this,'無')">無</span>
+                <span class="quick-pill" onclick="setVal(this,'異常')">異常</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="desc-cell">(2)主伸臂焊接部、接合部及伸臂支承座無顯著之裂痕、變形、損傷及腐蝕。</td>
+          <td class="result-col">
+            <div class="result-input-wrap">
+              <input type="text" class="result-input" data-key="res_1_1_2" placeholder="結果">
+              <div class="quick-pill-menu no-print">
+                <span class="quick-pill" onclick="setVal(this,'良好')">良好</span>
+                <span class="quick-pill" onclick="setVal(this,'正常')">正常</span>
+                <span class="quick-pill" onclick="setVal(this,'無')">無</span>
+                <span class="quick-pill" onclick="setVal(this,'異常')">異常</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="desc-cell">(3)主伸臂結合處之螺栓、螺帽、銷、鍵及栓無脫落、鬆動。</td>
+          <td class="result-col">
+            <div class="result-input-wrap">
+              <input type="text" class="result-input" data-key="res_1_1_3" placeholder="結果">
+              <div class="quick-pill-menu no-print">
+                <span class="quick-pill" onclick="setVal(this,'良好')">良好</span>
+                <span class="quick-pill" onclick="setVal(this,'正常')">正常</span>
+                <span class="quick-pill" onclick="setVal(this,'無')">無</span>
+                <span class="quick-pill" onclick="setVal(this,'異常')">異常</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="desc-cell">(4)輔助伸臂無顯著裂痕、變形、損傷及腐蝕。</td>
+          <td class="result-col">
+            <div class="result-input-wrap">
+              <input type="text" class="result-input" data-key="res_1_1_4" placeholder="結果">
+              <div class="quick-pill-menu no-print">
+                <span class="quick-pill" onclick="setVal(this,'良好')">良好</span>
+                <span class="quick-pill" onclick="setVal(this,'正常')">正常</span>
+                <span class="quick-pill" onclick="setVal(this,'無')">無</span>
+                <span class="quick-pill" onclick="setVal(this,'異常')">異常</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="desc-cell">(5)輔助伸臂焊接部、接合部及伸臂支承座無顯著之裂痕、變形、損傷及腐蝕。</td>
+          <td class="result-col">
+            <div class="result-input-wrap">
+              <input type="text" class="result-input" data-key="res_1_1_5" placeholder="結果">
+              <div class="quick-pill-menu no-print">
+                <span class="quick-pill" onclick="setVal(this,'良好')">良好</span>
+                <span class="quick-pill" onclick="setVal(this,'正常')">正常</span>
+                <span class="quick-pill" onclick="setVal(this,'無')">無</span>
+                <span class="quick-pill" onclick="setVal(this,'異常')">異常</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="desc-cell">(6)輔助伸臂結合處之螺栓、螺帽、銷、鍵及栓無脫落、鬆動。</td>
+          <td class="result-col">
+            <div class="result-input-wrap">
+              <input type="text" class="result-input" data-key="res_1_1_6" placeholder="結果">
+              <div class="quick-pill-menu no-print">
+                <span class="quick-pill" onclick="setVal(this,'良好')">良好</span>
+                <span class="quick-pill" onclick="setVal(this,'正常')">正常</span>
+                <span class="quick-pill" onclick="setVal(this,'無')">無</span>
+                <span class="quick-pill" onclick="setVal(this,'異常')">異常</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="desc-cell">(7)伸臂支持機構等固定妥當、無龜裂、損傷及變形。</td>
+          <td class="result-col">
+            <div class="result-input-wrap">
+              <input type="text" class="result-input" data-key="res_1_1_7" placeholder="結果">
+              <div class="quick-pill-menu no-print">
+                <span class="quick-pill" onclick="setVal(this,'良好')">良好</span>
+                <span class="quick-pill" onclick="setVal(this,'正常')">正常</span>
+                <span class="quick-pill" onclick="setVal(this,'無')">無</span>
+                <span class="quick-pill" onclick="setVal(this,'異常')">異常</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="desc-cell">(8)伸臂支持機構等各部接合銷、鍵及栓無脫落、鬆動。</td>
+          <td class="result-col">
+            <div class="result-input-wrap">
+              <input type="text" class="result-input" data-key="res_1_1_8" placeholder="結果">
+              <div class="quick-pill-menu no-print">
+                <span class="quick-pill" onclick="setVal(this,'良好')">良好</span>
+                <span class="quick-pill" onclick="setVal(this,'正常')">正常</span>
+                <span class="quick-pill" onclick="setVal(this,'無')">無</span>
+                <span class="quick-pill" onclick="setVal(this,'異常')">異常</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="desc-cell">(9)擴散接頭器保護蓋無變形、鬆脫及損傷與槽輪之間隙適當。</td>
+          <td class="result-col">
+            <div class="result-input-wrap">
+              <input type="text" class="result-input" data-key="res_1_1_9" placeholder="結果">
+              <div class="quick-pill-menu no-print">
+                <span class="quick-pill" onclick="setVal(this,'良好')">良好</span>
+                <span class="quick-pill" onclick="setVal(this,'正常')">正常</span>
+                <span class="quick-pill" onclick="setVal(this,'無')">無</span>
+                <span class="quick-pill" onclick="setVal(this,'異常')">異常</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+
+        <!-- 2. 伸臂等尺寸 (1 row) -->
+        <tr>
+          <td class="sub-category">2.伸臂等尺寸</td>
+          <td class="desc-cell">
+            <div class="desc-p nowrap-line">
+              主伸臂長度<input type="text" class="inline-input w-num-sm" id="dim_main_boom_len">m、輔助伸臂<input type="text" class="inline-input w-num-sm" id="dim_aux_boom_len">m<input type="text" class="inline-input w-num-xs" id="dim_aux_boom_count">支。
+            </div>
+            <div class="desc-p nowrap-line">
+              伸臂傾斜角範圍<input type="text" class="inline-input w-num-xs" id="dim_angle_min">度~<input type="text" class="inline-input w-num-xs" id="dim_angle_max">度、最大作業半徑<input type="text" class="inline-input w-num-sm" id="dim_max_radius">m。
+            </div>
+            <div class="desc-p nowrap-line">
+              旋轉限度<input type="text" class="inline-input w-num-sm" id="dim_rotate_limit">度。
+            </div>
+          </td>
+          <td class="result-col">
+            <div class="result-input-wrap">
+              <input type="text" class="result-input" data-key="res_1_2" placeholder="結果">
+              <div class="quick-pill-menu no-print">
+                <span class="quick-pill" onclick="setVal(this,'良好')">良好</span>
+                <span class="quick-pill" onclick="setVal(this,'正常')">正常</span>
+                <span class="quick-pill" onclick="setVal(this,'無')">無</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+
+        <!-- 3. 上部旋轉體 (3 rows) -->
+        <tr>
+          <td class="sub-category" rowspan="3">3.上部旋轉體</td>
+          <td class="desc-cell">(1)旋轉支持體之旋轉構架及伸臂支承托架無龜裂、變形。</td>
+          <td class="result-col">
+            <div class="result-input-wrap">
+              <input type="text" class="result-input" data-key="res_1_3_1" placeholder="結果">
+              <div class="quick-pill-menu no-print">
+                <span class="quick-pill" onclick="setVal(this,'良好')">良好</span>
+                <span class="quick-pill" onclick="setVal(this,'正常')">正常</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="desc-cell">(2)配重之重量、配置與設計值相符合；固定螺栓無鬆動或變形。</td>
+          <td class="result-col">
+            <div class="result-input-wrap">
+              <input type="text" class="result-input" data-key="res_1_3_2" placeholder="結果">
+              <div class="quick-pill-menu no-print">
+                <span class="quick-pill" onclick="setVal(this,'良好')">良好</span>
+                <span class="quick-pill" onclick="setVal(this,'正常')">正常</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="desc-cell">(3)本體鈑金、引擎護蓋、攀登踏板無鬆動、腐蝕或變形。</td>
+          <td class="result-col">
+            <div class="result-input-wrap">
+              <input type="text" class="result-input" data-key="res_1_3_3" placeholder="結果">
+              <div class="quick-pill-menu no-print">
+                <span class="quick-pill" onclick="setVal(this,'良好')">良好</span>
+                <span class="quick-pill" onclick="setVal(this,'正常')">正常</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+
+        <!-- 4. 下部走行體 (1 row) -->
+        <tr>
+          <td class="sub-category">4.下部走行體</td>
+          <td class="desc-cell">無顯著之損傷、磨耗、變形或腐蝕且螺栓螺帽無脫落、鬆動。</td>
+          <td class="result-col">
+            <div class="result-input-wrap">
+              <input type="text" class="result-input" data-key="res_1_4" placeholder="結果">
+              <div class="quick-pill-menu no-print">
+                <span class="quick-pill" onclick="setVal(this,'良好')">良好</span>
+                <span class="quick-pill" onclick="setVal(this,'正常')">正常</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+
+        <!-- 5. 外伸撐座 (3 rows) -->
+        <tr>
+          <td class="sub-category" rowspan="3">5.外伸撐座</td>
+          <td class="desc-cell">(1)撐樑、樑箱、鎖扣及腳墊浮板無龜裂、變形等。</td>
+          <td class="result-col">
+            <div class="result-input-wrap">
+              <input type="text" class="result-input" data-key="res_1_5_1" placeholder="結果">
+              <div class="quick-pill-menu no-print">
+                <span class="quick-pill" onclick="setVal(this,'良好')">良好</span>
+                <span class="quick-pill" onclick="setVal(this,'正常')">正常</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="desc-cell">(2)油壓缸無顯著漏油、變形及凹陷。</td>
+          <td class="result-col">
+            <div class="result-input-wrap">
+              <input type="text" class="result-input" data-key="res_1_5_2" placeholder="結果">
+              <div class="quick-pill-menu no-print">
+                <span class="quick-pill" onclick="setVal(this,'良好')">良好</span>
+                <span class="quick-pill" onclick="setVal(this,'正常')">正常</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="desc-cell">(3)千斤頂螺栓無龜裂、變形及磨耗。</td>
+          <td class="result-col">
+            <div class="result-input-wrap">
+              <input type="text" class="result-input" data-key="res_1_5_3" placeholder="結果">
+              <div class="quick-pill-menu no-print">
+                <span class="quick-pill" onclick="setVal(this,'良好')">良好</span>
+                <span class="quick-pill" onclick="setVal(this,'正常')">正常</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+
+        <!-- 6. 履帶部 (3 rows) -->
+        <tr>
+          <td class="sub-category" rowspan="3">6.履帶部</td>
+          <td class="desc-cell">(1)履帶及構架無龜裂、顯著磨耗及變形。</td>
+          <td class="result-col">
+            <div class="result-input-wrap">
+              <input type="text" class="result-input" data-key="res_1_6_1" placeholder="結果">
+              <div class="quick-pill-menu no-print">
+                <span class="quick-pill" onclick="setVal(this,'良好')">良好</span>
+                <span class="quick-pill" onclick="setVal(this,'正常')">正常</span>
+                <span class="quick-pill" onclick="setVal(this,'無')">無</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="desc-cell">(2)栓及銷之防脫裝置無磨耗或脫落。</td>
+          <td class="result-col">
+            <div class="result-input-wrap">
+              <input type="text" class="result-input" data-key="res_1_6_2" placeholder="結果">
+              <div class="quick-pill-menu no-print">
+                <span class="quick-pill" onclick="setVal(this,'良好')">良好</span>
+                <span class="quick-pill" onclick="setVal(this,'正常')">正常</span>
+                <span class="quick-pill" onclick="setVal(this,'無')">無</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="desc-cell">(3)履帶之鬆緊度適當。</td>
+          <td class="result-col">
+            <div class="result-input-wrap">
+              <input type="text" class="result-input" data-key="res_1_6_3" placeholder="結果">
+              <div class="quick-pill-menu no-print">
+                <span class="quick-pill" onclick="setVal(this,'良好')">良好</span>
+                <span class="quick-pill" onclick="setVal(this,'正常')">正常</span>
+                <span class="quick-pill" onclick="setVal(this,'無')">無</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+
+        <!-- 7. 桁架、腳架(跨載機,橋式機) (2 rows) -->
+        <tr>
+          <td class="sub-category" rowspan="2">7.桁架、腳架<br><small>(跨載機,橋式機)</small></td>
+          <td class="desc-cell">(1)無顯著之裂痕、變形等影響安全動作。</td>
+          <td class="result-col">
+            <div class="result-input-wrap">
+              <input type="text" class="result-input" data-key="res_1_7_1" placeholder="結果">
+              <div class="quick-pill-menu no-print">
+                <span class="quick-pill" onclick="setVal(this,'良好')">良好</span>
+                <span class="quick-pill" onclick="setVal(this,'正常')">正常</span>
+                <span class="quick-pill" onclick="setVal(this,'無')">無</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="desc-cell">(2)鎖緊螺栓、螺帽、鉚釘等無脫落、鬆動。</td>
+          <td class="result-col">
+            <div class="result-input-wrap">
+              <input type="text" class="result-input" data-key="res_1_7_2" placeholder="結果">
+              <div class="quick-pill-menu no-print">
+                <span class="quick-pill" onclick="setVal(this,'良好')">良好</span>
+                <span class="quick-pill" onclick="setVal(this,'正常')">正常</span>
+                <span class="quick-pill" onclick="setVal(this,'無')">無</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+
+        <!-- 8. 起伏油壓缸 (3 rows) -->
+        <tr>
+          <td class="sub-category" rowspan="3">8.起伏油壓缸</td>
+          <td class="desc-cell">(1)油壓缸無裂痕、刮傷、變形。</td>
+          <td class="result-col">
+            <div class="result-input-wrap">
+              <input type="text" class="result-input" data-key="res_1_8_1" placeholder="結果">
+              <div class="quick-pill-menu no-print">
+                <span class="quick-pill" onclick="setVal(this,'良好')">良好</span>
+                <span class="quick-pill" onclick="setVal(this,'正常')">正常</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="desc-cell">(2)焊接部及托架無有害之裂痕、變形。</td>
+          <td class="result-col">
+            <div class="result-input-wrap">
+              <input type="text" class="result-input" data-key="res_1_8_2" placeholder="結果">
+              <div class="quick-pill-menu no-print">
+                <span class="quick-pill" onclick="setVal(this,'良好')">良好</span>
+                <span class="quick-pill" onclick="setVal(this,'正常')">正常</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="desc-cell">(3)油壓缸無顯著漏油現象。</td>
+          <td class="result-col">
+            <div class="result-input-wrap">
+              <input type="text" class="result-input" data-key="res_1_8_3" placeholder="結果">
+              <div class="quick-pill-menu no-print">
+                <span class="quick-pill" onclick="setVal(this,'良好')">良好</span>
+                <span class="quick-pill" onclick="setVal(this,'正常')">正常</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+
+        <!-- 9. 吊鉤、吊具等 (5 rows) -->
+        <tr>
+          <td class="sub-category" rowspan="5">9.吊鉤、吊具等</td>
+          <td class="desc-cell">(1)吊鉤應鍛造成形,能自由圓滑轉動,並不得龜裂或明顯之銹蝕等有害之缺陷，且無焊補、電鍍等改造。</td>
+          <td class="result-col">
+            <div class="result-input-wrap">
+              <input type="text" class="result-input" data-key="res_1_9_1" placeholder="結果">
+              <div class="quick-pill-menu no-print">
+                <span class="quick-pill" onclick="setVal(this,'良好')">良好</span>
+                <span class="quick-pill" onclick="setVal(this,'正常')">正常</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="desc-cell">(2)吊鉤組之鍵板、鎖緊銷、止動螺栓、開口銷等無鬆脫、鬆動或損傷影響安全動作。</td>
+          <td class="result-col">
+            <div class="result-input-wrap">
+              <input type="text" class="result-input" data-key="res_1_9_2" placeholder="結果">
+              <div class="quick-pill-menu no-print">
+                <span class="quick-pill" onclick="setVal(this,'良好')">良好</span>
+                <span class="quick-pill" onclick="setVal(this,'正常')">正常</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="desc-cell">
+            <div class="desc-p">(3)各吊鉤規格尺寸未變更。</div>
+            <div class="desc-p nowrap-line">第一斷面：B1=<input type="text" class="inline-input w-num-md" id="hook_b1">；H1=<input type="text" class="inline-input w-num-md" id="hook_h1">；</div>
+            <div class="desc-p nowrap-line">第二斷面：B3=<input type="text" class="inline-input w-num-md" id="hook_b3">；H2=<input type="text" class="inline-input w-num-md" id="hook_h2">；</div>
+            <div class="desc-p nowrap-line">開口標距：<input type="text" class="inline-input w-num-md" id="hook_opening">。</div>
+            <div class="desc-p">開口標距無超過原標示尺寸5%。與吊具接觸部分磨損量無超過製造廠之規定值者。(無規定值時，其磨損量不得超過原尺寸之5%)(單位：㎜)</div>
+            <div class="desc-p nowrap-line">吊鉤（具）重：<input type="text" class="inline-input w-num-sm" id="hook_weight">公噸。</div>
+          </td>
+          <td class="result-col">
+            <div class="result-input-wrap">
+              <input type="text" class="result-input" data-key="res_1_9_3" placeholder="結果">
+              <div class="quick-pill-menu no-print">
+                <span class="quick-pill" onclick="setVal(this,'良好')">良好</span>
+                <span class="quick-pill" onclick="setVal(this,'正常')">正常</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="desc-cell">(4)吊具無顯著之變形、裂痕。</td>
+          <td class="result-col">
+            <div class="result-input-wrap">
+              <input type="text" class="result-input" data-key="res_1_9_4" placeholder="結果">
+              <div class="quick-pill-menu no-print">
+                <span class="quick-pill" onclick="setVal(this,'良好')">良好</span>
+                <span class="quick-pill" onclick="setVal(this,'正常')">正常</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="desc-cell">(5)吊架鎖扣(Twist lock) 功能正常。(貨櫃吊架用)</td>
+          <td class="result-col">
+            <div class="result-input-wrap">
+              <input type="text" class="result-input" data-key="res_1_9_5" placeholder="結果">
+              <div class="quick-pill-menu no-print">
+                <span class="quick-pill" onclick="setVal(this,'良好')">良好</span>
+                <span class="quick-pill" onclick="setVal(this,'正常')">正常</span>
+                <span class="quick-pill" onclick="setVal(this,'無')">無</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+
+        <!-- ==================== 二、機械、電氣部分 (32 items) ==================== -->
+        <!-- 1. 原動機 (1 row) -->
+        <tr>
+          <td class="v-header" rowspan="32">二<br>、<br>機<br>械<br>、<br>電<br>氣<br>部<br>分</td>
+          <td class="sub-category">1.原動機</td>
+          <td class="desc-cell">
+            <div class="desc-p">無顯著之損傷、磨耗、變形或腐蝕且螺栓、螺帽無脫落鬆動。</div>
+            <div class="desc-p nowrap-line">無異常音響，固定良好。額定輸出：<input type="text" class="inline-input w-num-sm" id="engine_power"> cc。</div>
+          </td>
+          <td class="result-col">
+            <div class="result-input-wrap">
+              <input type="text" class="result-input" data-key="res_2_1" placeholder="結果">
+              <div class="quick-pill-menu no-print">
+                <span class="quick-pill" onclick="setVal(this,'良好')">良好</span>
+                <span class="quick-pill" onclick="setVal(this,'正常')">正常</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+
+        <!-- 2. 動力傳導裝置 (2 rows) -->
+        <tr>
+          <td class="sub-category" rowspan="2">2.動力傳導裝置</td>
+          <td class="desc-cell">(1)傳動軸、齒輪箱等無顯著損傷或變形。</td>
+          <td class="result-col">
+            <div class="result-input-wrap">
+              <input type="text" class="result-input" data-key="res_2_2_1" placeholder="結果">
+              <div class="quick-pill-menu no-print">
+                <span class="quick-pill" onclick="setVal(this,'良好')">良好</span>
+                <span class="quick-pill" onclick="setVal(this,'正常')">正常</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="desc-cell">(2)無異常噪音、潤滑油足夠、良好。。</td>
+          <td class="result-col">
+            <div class="result-input-wrap">
+              <input type="text" class="result-input" data-key="res_2_2_2" placeholder="結果">
+              <div class="quick-pill-menu no-print">
+                <span class="quick-pill" onclick="setVal(this,'良好')">良好</span>
+                <span class="quick-pill" onclick="setVal(this,'正常')">正常</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+
+        <!-- 3. 油壓裝置 (4 rows) -->
+        <tr>
+          <td class="sub-category" rowspan="4">3.油壓裝置</td>
+          <td class="desc-cell">(1)油壓管路固定無鬆脫、無干涉、凹陷、老化、龜裂及漏油現象。</td>
+          <td class="result-col">
+            <div class="result-input-wrap">
+              <input type="text" class="result-input" data-key="res_2_3_1" placeholder="結果">
+              <div class="quick-pill-menu no-print">
+                <span class="quick-pill" onclick="setVal(this,'良好')">良好</span>
+                <span class="quick-pill" onclick="setVal(this,'正常')">正常</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="desc-cell">(2)軟管捲軸收捲順暢良好。</td>
+          <td class="result-col">
+            <div class="result-input-wrap">
+              <input type="text" class="result-input" data-key="res_2_3_2" placeholder="結果">
+              <div class="quick-pill-menu no-print">
+                <span class="quick-pill" onclick="setVal(this,'良好')">良好</span>
+                <span class="quick-pill" onclick="setVal(this,'正常')">正常</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="desc-cell">(3)油壓泵、油壓缸無顯著之漏油、異音及發熱。</td>
+          <td class="result-col">
+            <div class="result-input-wrap">
+              <input type="text" class="result-input" data-key="res_2_3_3" placeholder="結果">
+              <div class="quick-pill-menu no-print">
+                <span class="quick-pill" onclick="setVal(this,'良好')">良好</span>
+                <span class="quick-pill" onclick="setVal(this,'正常')">正常</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="desc-cell">(4)蓄壓器能維持正常作業壓力</td>
+          <td class="result-col">
+            <div class="result-input-wrap">
+              <input type="text" class="result-input" data-key="res_2_3_4" placeholder="結果">
+              <div class="quick-pill-menu no-print">
+                <span class="quick-pill" onclick="setVal(this,'良好')">良好</span>
+                <span class="quick-pill" onclick="setVal(this,'正常')">正常</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+
+        <!-- 4. 制動裝置 (6 rows) -->
+        <tr>
+          <td class="sub-category" rowspan="6">4.制動裝置</td>
+          <td class="desc-cell">(1)制動裝置基座、結合螺栓、螺帽、銷、鍵及栓無脫落、鬆動。</td>
+          <td class="result-col">
+            <div class="result-input-wrap">
+              <input type="text" class="result-input" data-key="res_2_4_1" placeholder="結果">
+              <div class="quick-pill-menu no-print">
+                <span class="quick-pill" onclick="setVal(this,'良好')">良好</span>
+                <span class="quick-pill" onclick="setVal(this,'正常')">正常</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="desc-cell">(2)剎車帶、刹車塊及刹車鼓等無龜裂、變形。</td>
+          <td class="result-col">
+            <div class="result-input-wrap">
+              <input type="text" class="result-input" data-key="res_2_4_2" placeholder="結果">
+              <div class="quick-pill-menu no-print">
+                <span class="quick-pill" onclick="setVal(this,'良好')">良好</span>
+                <span class="quick-pill" onclick="setVal(this,'正常')">正常</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="desc-cell">(3)來令片無顯著磨耗，與刹車鼓的接觸面無異常。</td>
+          <td class="result-col">
+            <div class="result-input-wrap">
+              <input type="text" class="result-input" data-key="res_2_4_3" placeholder="結果">
+              <div class="quick-pill-menu no-print">
+                <span class="quick-pill" onclick="setVal(this,'良好')">良好</span>
+                <span class="quick-pill" onclick="setVal(this,'正常')">正常</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="desc-cell">(4)來令片鉚釘無鬆弛、脫落。</td>
+          <td class="result-col">
+            <div class="result-input-wrap">
+              <input type="text" class="result-input" data-key="res_2_4_4" placeholder="結果">
+              <div class="quick-pill-menu no-print">
+                <span class="quick-pill" onclick="setVal(this,'良好')">良好</span>
+                <span class="quick-pill" onclick="setVal(this,'正常')">正常</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="desc-cell">(5)棘爪、棘輪無龜裂、變形；棘爪無綁死、拆除、彈簧力無減弱。</td>
+          <td class="result-col">
+            <div class="result-input-wrap">
+              <input type="text" class="result-input" data-key="res_2_4_5" placeholder="結果">
+              <div class="quick-pill-menu no-print">
+                <span class="quick-pill" onclick="setVal(this,'良好')">良好</span>
+                <span class="quick-pill" onclick="setVal(this,'正常')">正常</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="desc-cell">(6)起重機動力被遮斷時能自行制動。</td>
+          <td class="result-col">
+            <div class="result-input-wrap">
+              <input type="text" class="result-input" data-key="res_2_4_6" placeholder="結果">
+              <div class="quick-pill-menu no-print">
+                <span class="quick-pill" onclick="setVal(this,'良好')">良好</span>
+                <span class="quick-pill" onclick="setVal(this,'正常')">正常</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+
+        <!-- 5. 捲胴、槽輪 (7 rows) -->
+        <tr>
+          <td class="sub-category" rowspan="7">5.捲胴、槽輪</td>
+          <td class="desc-cell">(1)捲胴無龜裂、變形及磨損。</td>
+          <td class="result-col">
+            <div class="result-input-wrap">
+              <input type="text" class="result-input" data-key="res_2_5_1" placeholder="結果">
+              <div class="quick-pill-menu no-print">
+                <span class="quick-pill" onclick="setVal(this,'良好')">良好</span>
+                <span class="quick-pill" onclick="setVal(this,'正常')">正常</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="desc-cell">(2)鋼索的安裝處無裂縫或變形，且安裝用零件無鬆脫。</td>
+          <td class="result-col">
+            <div class="result-input-wrap">
+              <input type="text" class="result-input" data-key="res_2_5_2" placeholder="結果">
+              <div class="quick-pill-menu no-print">
+                <span class="quick-pill" onclick="setVal(this,'良好')">良好</span>
+                <span class="quick-pill" onclick="setVal(this,'正常')">正常</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="desc-cell">(3)回轉無異音、發熱及振動。</td>
+          <td class="result-col">
+            <div class="result-input-wrap">
+              <input type="text" class="result-input" data-key="res_2_5_3" placeholder="結果">
+              <div class="quick-pill-menu no-print">
+                <span class="quick-pill" onclick="setVal(this,'良好')">良好</span>
+                <span class="quick-pill" onclick="setVal(this,'正常')">正常</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="desc-cell">(4)槽輪的溝部及凸緣部無顯著磨耗及損傷。</td>
+          <td class="result-col">
+            <div class="result-input-wrap">
+              <input type="text" class="result-input" data-key="res_2_5_4" placeholder="結果">
+              <div class="quick-pill-menu no-print">
+                <span class="quick-pill" onclick="setVal(this,'良好')">良好</span>
+                <span class="quick-pill" onclick="setVal(this,'正常')">正常</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="desc-cell">(5)輻及輪轂無龜裂、變形或磨耗。</td>
+          <td class="result-col">
+            <div class="result-input-wrap">
+              <input type="text" class="result-input" data-key="res_2_5_7" placeholder="結果">
+              <div class="quick-pill-menu no-print">
+                <span class="quick-pill" onclick="setVal(this,'良好')">良好</span>
+                <span class="quick-pill" onclick="setVal(this,'正常')">正常</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="desc-cell">(6)防止鋼索脫出槽溝阻擋裝置機能良好，無損傷。</td>
+          <td class="result-col">
+            <div class="result-input-wrap">
+              <input type="text" class="result-input" data-key="res_2_5_6" placeholder="結果">
+              <div class="quick-pill-menu no-print">
+                <span class="quick-pill" onclick="setVal(this,'良好')">良好</span>
+                <span class="quick-pill" onclick="setVal(this,'正常')">正常</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="desc-cell nowrap-line">
+            (7)捲胴節徑實測<input type="text" class="inline-input w-num-sm" id="drum_dia">mm、槽輪節徑實測<input type="text" class="inline-input w-num-sm" id="sheave_dia">mm，與鋼索直徑之比值，應符合構造標準規定值。
+          </td>
+          <td class="result-col">
+            <div class="result-input-wrap">
+              <input type="text" class="result-input" data-key="res_2_5_5" placeholder="結果">
+              <div class="quick-pill-menu no-print">
+                <span class="quick-pill" onclick="setVal(this,'良好')">良好</span>
+                <span class="quick-pill" onclick="setVal(this,'正常')">正常</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+
+        <!-- 6. 旋轉裝置 (5 rows) -->
+        <tr>
+          <td class="sub-category" rowspan="5">6.旋轉裝置</td>
+          <td class="desc-cell">(1)焊接部位無龜裂。</td>
+          <td class="result-col">
+            <div class="result-input-wrap">
+              <input type="text" class="result-input" data-key="res_2_6_1" placeholder="結果">
+              <div class="quick-pill-menu no-print">
+                <span class="quick-pill" onclick="setVal(this,'良好')">良好</span>
+                <span class="quick-pill" onclick="setVal(this,'正常')">正常</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="desc-cell">(2)固定螺栓、螺帽無脫落、鬆動。</td>
+          <td class="result-col">
+            <div class="result-input-wrap">
+              <input type="text" class="result-input" data-key="res_2_6_2" placeholder="結果">
+              <div class="quick-pill-menu no-print">
+                <span class="quick-pill" onclick="setVal(this,'良好')">良好</span>
+                <span class="quick-pill" onclick="setVal(this,'正常')">正常</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="desc-cell">(3)各部構件、框架等無腐蝕。</td>
+          <td class="result-col">
+            <div class="result-input-wrap">
+              <input type="text" class="result-input" data-key="res_2_6_3" placeholder="結果">
+              <div class="quick-pill-menu no-print">
+                <span class="quick-pill" onclick="setVal(this,'良好')">良好</span>
+                <span class="quick-pill" onclick="setVal(this,'正常')">正常</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="desc-cell">(4)旋轉齒輪與旋轉圈座潤滑良好無磨損、龜裂、異音。</td>
+          <td class="result-col">
+            <div class="result-input-wrap">
+              <input type="text" class="result-input" data-key="res_2_6_4" placeholder="結果">
+              <div class="quick-pill-menu no-print">
+                <span class="quick-pill" onclick="setVal(this,'良好')">良好</span>
+                <span class="quick-pill" onclick="setVal(this,'正常')">正常</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="desc-cell">(5)應有防止行駛中旋轉作動之構件或裝置。</td>
+          <td class="result-col">
+            <div class="result-input-wrap">
+              <input type="text" class="result-input" data-key="res_2_6_5" placeholder="結果">
+              <div class="quick-pill-menu no-print">
+                <span class="quick-pill" onclick="setVal(this,'良好')">良好</span>
+                <span class="quick-pill" onclick="setVal(this,'正常')">正常</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+
+        <!-- 7. 操縱裝置 (3 rows) -->
+        <tr>
+          <td class="sub-category" rowspan="3">7.操縱裝置</td>
+          <td class="desc-cell">(1)吊升裝置.起伏裝置.伸縮裝置、廻轉裝置、警報裝置、開關裝置、制動器等操作部分,不得妨礙操作人員之視界,且應置於操作員易於操作之位置。</td>
+          <td class="result-col">
+            <div class="result-input-wrap">
+              <input type="text" class="result-input" data-key="res_2_7_1" placeholder="結果">
+              <div class="quick-pill-menu no-print">
+                <span class="quick-pill" onclick="setVal(this,'良好')">良好</span>
+                <span class="quick-pill" onclick="setVal(this,'正常')">正常</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="desc-cell">(2)吊升、起伏及伸縮裝置之操作部分，應標示動作種別、方向及停止位置。</td>
+          <td class="result-col">
+            <div class="result-input-wrap">
+              <input type="text" class="result-input" data-key="res_2_7_2" placeholder="結果">
+              <div class="quick-pill-menu no-print">
+                <span class="quick-pill" onclick="setVal(this,'良好')">良好</span>
+                <span class="quick-pill" onclick="setVal(this,'正常')">正常</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="desc-cell">(3)捲揚動力切換裝置，具有防止吊擧物掉落。</td>
+          <td class="result-col">
+            <div class="result-input-wrap">
+              <input type="text" class="result-input" data-key="res_2_7_3" placeholder="結果">
+              <div class="quick-pill-menu no-print">
+                <span class="quick-pill" onclick="setVal(this,'良好')">良好</span>
+                <span class="quick-pill" onclick="setVal(this,'正常')">正常</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+
+        <!-- 8. 控制裝置 (1 row) -->
+        <tr>
+          <td class="sub-category">8.控制裝置</td>
+          <td class="desc-cell">作動圓滑，功能正常</td>
+          <td class="result-col">
+            <div class="result-input-wrap">
+              <input type="text" class="result-input" data-key="res_2_8" placeholder="結果">
+              <div class="quick-pill-menu no-print">
+                <span class="quick-pill" onclick="setVal(this,'良好')">良好</span>
+                <span class="quick-pill" onclick="setVal(this,'正常')">正常</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+
+        <!-- 9. 駕駛室 (操作室) (3 rows) -->
+        <tr>
+          <td class="sub-category" rowspan="3">9.駕駛室<br>(操作室)</td>
+          <td class="desc-cell">(1)窗部視野良好,使用安全玻璃具自動擦拭裝置。</td>
+          <td class="result-col">
+            <div class="result-input-wrap">
+              <input type="text" class="result-input" data-key="res_2_9_1" placeholder="結果">
+              <div class="quick-pill-menu no-print">
+                <span class="quick-pill" onclick="setVal(this,'良好')">良好</span>
+                <span class="quick-pill" onclick="setVal(this,'正常')">正常</span>
+                <span class="quick-pill" onclick="setVal(this,'無')">無</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="desc-cell">(2)駕駛室適當位置有性能曲線表。</td>
+          <td class="result-col">
+            <div class="result-input-wrap">
+              <input type="text" class="result-input" data-key="res_2_9_2" placeholder="結果">
+              <div class="quick-pill-menu no-print">
+                <span class="quick-pill" onclick="setVal(this,'良好')">良好</span>
+                <span class="quick-pill" onclick="setVal(this,'正常')">正常</span>
+                <span class="quick-pill" onclick="setVal(this,'無')">無</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="desc-cell">(3)能防止操作人員因行駛中之振動、衝擊搖盪而墜落。</td>
+          <td class="result-col">
+            <div class="result-input-wrap">
+              <input type="text" class="result-input" data-key="res_2_9_3" placeholder="結果">
+              <div class="quick-pill-menu no-print">
+                <span class="quick-pill" onclick="setVal(this,'良好')">良好</span>
+                <span class="quick-pill" onclick="setVal(this,'正常')">正常</span>
+                <span class="quick-pill" onclick="setVal(this,'無')">無</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+
+        <!-- ==================== 三、安全裝置 (12 items) ==================== -->
+        <!-- 1. 過捲預防或警報裝置 (2 rows) -->
+        <tr>
+          <td class="v-header" rowspan="12">三<br>、<br>安<br>全<br>裝<br>置</td>
+          <td class="sub-category" rowspan="2">1.過捲預防或警報裝置</td>
+          <td class="desc-cell">(1)過捲預防或警報裝置具自動遮斷動力及制動或發出警報音響機能，作動位置正確易於檢點及堅固之構造。</td>
+          <td class="result-col">
+            <div class="result-input-wrap">
+              <input type="text" class="result-input" data-key="res_3_1_1" placeholder="結果">
+              <div class="quick-pill-menu no-print">
+                <span class="quick-pill" onclick="setVal(this,'良好')">良好</span>
+                <span class="quick-pill" onclick="setVal(this,'正常')">正常</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="desc-cell">(2)電氣部分應具絕緣及防水、粉塵構造，具接點開放預防構造。</td>
+          <td class="result-col">
+            <div class="result-input-wrap">
+              <input type="text" class="result-input" data-key="res_3_1_2" placeholder="結果">
+              <div class="quick-pill-menu no-print">
+                <span class="quick-pill" onclick="setVal(this,'良好')">良好</span>
+                <span class="quick-pill" onclick="setVal(this,'正常')">正常</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+
+        <!-- 2. 伸臂起伏限制及背向止動裝置 (2 rows) -->
+        <tr>
+          <td class="sub-category" rowspan="2">2.伸臂起伏限制及背向止動裝置</td>
+          <td class="desc-cell">(1)起伏限制功能正常(遮斷動力或發出警報音響),且安裝部無損傷、鬆動現象。</td>
+          <td class="result-col">
+            <div class="result-input-wrap">
+              <input type="text" class="result-input" data-key="res_3_2_1" placeholder="結果">
+              <div class="quick-pill-menu no-print">
+                <span class="quick-pill" onclick="setVal(this,'良好')">良好</span>
+                <span class="quick-pill" onclick="setVal(this,'正常')">正常</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="desc-cell">(2)背向止動裝置具有充分強度，無顯著變形、裂痕影響安全動作。</td>
+          <td class="result-col">
+            <div class="result-input-wrap">
+              <input type="text" class="result-input" data-key="res_3_2_2" placeholder="結果">
+              <div class="quick-pill-menu no-print">
+                <span class="quick-pill" onclick="setVal(this,'良好')">良好</span>
+                <span class="quick-pill" onclick="setVal(this,'正常')">正常</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+
+        <!-- 3. 過負荷預防或警報裝置 (1 row) -->
+        <tr>
+          <td class="sub-category">3.過負荷預防或警報裝置</td>
+          <td class="desc-cell">
+            超過額定荷重時能立即自動停止動作；或在超過額定荷重前能發出警報聲響；或以（
+            <label class="chk-label"><input type="checkbox" id="overload_valve">安全閥</label>
+            <label class="chk-label"><input type="checkbox" id="overload_other_chk"><input type="text" class="inline-input w-num-md" id="overload_other_text" placeholder="ˍˍˍ"></label>
+            ）其他替代裝置。
+          </td>
+          <td class="result-col">
+            <div class="result-input-wrap">
+              <input type="text" class="result-input" data-key="res_3_3" placeholder="結果">
+              <div class="quick-pill-menu no-print">
+                <span class="quick-pill" onclick="setVal(this,'良好')">良好</span>
+                <span class="quick-pill" onclick="setVal(this,'正常')">正常</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+
+        <!-- 4. 伸臂傾斜角指示裝置 (1 row) -->
+        <tr>
+          <td class="sub-category">4.伸臂傾斜角指示裝置</td>
+          <td class="desc-cell">應設易見處，且擺動圓滑、機能正常。</td>
+          <td class="result-col">
+            <div class="result-input-wrap">
+              <input type="text" class="result-input" data-key="res_3_4" placeholder="結果">
+              <div class="quick-pill-menu no-print">
+                <span class="quick-pill" onclick="setVal(this,'良好')">良好</span>
+                <span class="quick-pill" onclick="setVal(this,'正常')">正常</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+
+        <!-- 5. 安全閥 (1 row) -->
+        <tr>
+          <td class="sub-category">5.安全閥</td>
+          <td class="desc-cell">安全閥作動良好。</td>
+          <td class="result-col">
+            <div class="result-input-wrap">
+              <input type="text" class="result-input" data-key="res_3_5" placeholder="結果">
+              <div class="quick-pill-menu no-print">
+                <span class="quick-pill" onclick="setVal(this,'良好')">良好</span>
+                <span class="quick-pill" onclick="setVal(this,'正常')">正常</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+
+        <!-- 6. 逆止閥 (1 row) -->
+        <tr>
+          <td class="sub-category">6.逆止閥</td>
+          <td class="desc-cell">功能正常。</td>
+          <td class="result-col">
+            <div class="result-input-wrap">
+              <input type="text" class="result-input" data-key="res_3_6" placeholder="結果">
+              <div class="quick-pill-menu no-print">
+                <span class="quick-pill" onclick="setVal(this,'良好')">良好</span>
+                <span class="quick-pill" onclick="setVal(this,'正常')">正常</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+
+        <!-- 7. 回轉部分之防護 (1 row) -->
+        <tr>
+          <td class="sub-category">7.回轉部分之防護</td>
+          <td class="desc-cell">護圍或覆罩無影響安全之變形或缺損。</td>
+          <td class="result-col">
+            <div class="result-input-wrap">
+              <input type="text" class="result-input" data-key="res_3_7" placeholder="結果">
+              <div class="quick-pill-menu no-print">
+                <span class="quick-pill" onclick="setVal(this,'良好')">良好</span>
+                <span class="quick-pill" onclick="setVal(this,'正常')">正常</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+
+        <!-- 8. 防止脫落裝置 (1 row) -->
+        <tr>
+          <td class="sub-category">8.防止脫落裝置</td>
+          <td class="desc-cell">構件良好，功能正常。</td>
+          <td class="result-col">
+            <div class="result-input-wrap">
+              <input type="text" class="result-input" data-key="res_3_8" placeholder="結果">
+              <div class="quick-pill-menu no-print">
+                <span class="quick-pill" onclick="setVal(this,'良好')">良好</span>
+                <span class="quick-pill" onclick="setVal(this,'正常')">正常</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+
+        <!-- 9. 鋼索防鬆裝置 (1 row) -->
+        <tr>
+          <td class="sub-category">9.鋼索防鬆裝置</td>
+          <td class="desc-cell">構件良好，功能正常。</td>
+          <td class="result-col">
+            <div class="result-input-wrap">
+              <input type="text" class="result-input" data-key="res_3_9" placeholder="結果">
+              <div class="quick-pill-menu no-print">
+                <span class="quick-pill" onclick="setVal(this,'良好')">良好</span>
+                <span class="quick-pill" onclick="setVal(this,'正常')">正常</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+
+        <!-- 10. 警告裝置及照明燈具等 (1 row) -->
+        <tr>
+          <td class="sub-category">10.警告裝置及照明燈具等</td>
+          <td class="desc-cell">依監理單位規定設置各種安全燈具、照後鏡及警報等。</td>
+          <td class="result-col">
+            <div class="result-input-wrap">
+              <input type="text" class="result-input" data-key="res_3_10" placeholder="結果">
+              <div class="quick-pill-menu no-print">
+                <span class="quick-pill" onclick="setVal(this,'良好')">良好</span>
+                <span class="quick-pill" onclick="setVal(this,'正常')">正常</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+
+        <!-- ==================== 四、加工 (3 items) ==================== -->
+        <tr>
+          <td class="v-header" rowspan="3">四<br>、<br>加<br>工</td>
+          <td class="sub-category">1.焊接</td>
+          <td class="desc-cell">焊接部分充分熔入，無裂痕、燒缺及焊疤等影響強度之缺陷。</td>
+          <td class="result-col">
+            <div class="result-input-wrap">
+              <input type="text" class="result-input" data-key="res_4_1" placeholder="結果">
+              <div class="quick-pill-menu no-print">
+                <span class="quick-pill" onclick="setVal(this,'良好')">良好</span>
+                <span class="quick-pill" onclick="setVal(this,'正常')">正常</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="sub-category">2.開孔</td>
+          <td class="desc-cell">結構部分之鉚孔及螺栓孔，應使用鑽孔，不得有迴紋或裂紋。</td>
+          <td class="result-col">
+            <div class="result-input-wrap">
+              <input type="text" class="result-input" data-key="res_4_2" placeholder="結果">
+              <div class="quick-pill-menu no-print">
+                <span class="quick-pill" onclick="setVal(this,'良好')">良好</span>
+                <span class="quick-pill" onclick="setVal(this,'正常')">正常</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="sub-category">3.螺栓防鬆脫措施</td>
+          <td class="desc-cell">應設防止螺栓、螺帽、螺釘等之鬆弛或脫落之設施。</td>
+          <td class="result-col">
+            <div class="result-input-wrap">
+              <input type="text" class="result-input" data-key="res_4_3" placeholder="結果">
+              <div class="quick-pill-menu no-print">
+                <span class="quick-pill" onclick="setVal(this,'良好')">良好</span>
+                <span class="quick-pill" onclick="setVal(this,'正常')">正常</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+
+        <!-- ==================== 五、鋼索及吊鏈 (6 items) ==================== -->
+        <!-- 1. 鋼索 (4 rows) -->
+        <tr>
+          <td class="v-header" rowspan="6">五<br>、<br>鋼<br>索<br>及<br>吊<br>鏈</td>
+          <td class="sub-category" rowspan="4">1.鋼索</td>
+          <td class="desc-cell">(1)一撚間無10%以上之素線截斷、直徑減少未達公稱直徑之7%以上及無顯著之扭結、變形或腐蝕。</td>
+          <td class="result-col">
+            <div class="result-input-wrap">
+              <input type="text" class="result-input" data-key="res_5_1_1" placeholder="結果">
+              <div class="quick-pill-menu no-print">
+                <span class="quick-pill" onclick="setVal(this,'良好')">良好</span>
+                <span class="quick-pill" onclick="setVal(this,'正常')">正常</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="desc-cell">(2)吊具或伸臂置於最低位置時，捲揚或起伏捲胴應有二捲以上鋼索。</td>
+          <td class="result-col">
+            <div class="result-input-wrap">
+              <input type="text" class="result-input" data-key="res_5_1_2" placeholder="結果">
+              <div class="quick-pill-menu no-print">
+                <span class="quick-pill" onclick="setVal(this,'良好')">良好</span>
+                <span class="quick-pill" onclick="setVal(this,'正常')">正常</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="desc-cell">(3)鋼索末端固定正確具防鬆或自緊性能。</td>
+          <td class="result-col">
+            <div class="result-input-wrap">
+              <input type="text" class="result-input" data-key="res_5_1_3" placeholder="結果">
+              <div class="quick-pill-menu no-print">
+                <span class="quick-pill" onclick="setVal(this,'良好')">良好</span>
+                <span class="quick-pill" onclick="setVal(this,'正常')">正常</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="desc-cell">
+            <div class="desc-p">(4)鋼索規格尺寸。</div>
+            <div class="desc-p nowrap-line">主捲：構成<input type="text" class="inline-input w-num-xs" id="rope_main_strands">股<input type="text" class="inline-input w-num-sm" id="rope_main_nom_dia">mm實測直徑<input type="text" class="inline-input w-num-sm" id="rope_main_act_dia">mm；</div>
+            <div class="desc-p nowrap-line">輔捲：構成<input type="text" class="inline-input w-num-xs" id="rope_aux_strands">股<input type="text" class="inline-input w-num-sm" id="rope_aux_nom_dia">mm實測直徑<input type="text" class="inline-input w-num-sm" id="rope_aux_act_dia">mm；</div>
+            <div class="desc-p nowrap-line">起伏：構成<input type="text" class="inline-input w-num-xs" id="rope_derrick_strands">股<input type="text" class="inline-input w-num-sm" id="rope_derrick_nom_dia">mm實測直徑<input type="text" class="inline-input w-num-sm" id="rope_derrick_act_dia">mm；</div>
+            <div class="desc-p nowrap-line">支持：構成<input type="text" class="inline-input w-num-xs" id="rope_support_strands">股<input type="text" class="inline-input w-num-sm" id="rope_support_nom_dia">mm實測直徑<input type="text" class="inline-input w-num-sm" id="rope_support_act_dia">mm。</div>
+          </td>
+          <td class="result-col">
+            <div class="result-input-wrap">
+              <input type="text" class="result-input" data-key="res_5_1_4" placeholder="結果">
+              <div class="quick-pill-menu no-print">
+                <span class="quick-pill" onclick="setVal(this,'良好')">良好</span>
+                <span class="quick-pill" onclick="setVal(this,'正常')">正常</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+
+        <!-- 2. 吊鏈 (2 rows) -->
+        <tr>
+          <td class="sub-category" rowspan="2">2.吊鏈</td>
+          <td class="desc-cell">
+            <div class="desc-p nowrap-line">
+              (1)吊鏈斷面直徑減少未達製造時之10%(實測直徑<input type="text" class="inline-input w-num-sm" id="chain_act_dia">mm) 、
+            </div>
+            <div class="desc-p">
+              伸長率未達製造時5%(實測五節距<input type="text" class="inline-input w-num-md" id="chain_5pitch">mm)且不得有有害之龜裂及腐蝕現象。
+            </div>
+          </td>
+          <td class="result-col">
+            <div class="result-input-wrap">
+              <input type="text" class="result-input" data-key="res_5_2_1" placeholder="結果">
+              <div class="quick-pill-menu no-print">
+                <span class="quick-pill" onclick="setVal(this,'良好')">良好</span>
+                <span class="quick-pill" onclick="setVal(this,'正常')">正常</span>
+                <span class="quick-pill" onclick="setVal(this,'無')">無</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="desc-cell">
+            (2)滾子鏈條伸長量未超過原製造時長度2% (實測六節距<input type="text" class="inline-input w-num-md" id="chain_6pitch">mm)且不得有龜裂及腐蝕現象。
+          </td>
+          <td class="result-col">
+            <div class="result-input-wrap">
+              <input type="text" class="result-input" data-key="res_5_2_2" placeholder="結果">
+              <div class="quick-pill-menu no-print">
+                <span class="quick-pill" onclick="setVal(this,'良好')">良好</span>
+                <span class="quick-pill" onclick="setVal(this,'正常')">正常</span>
+                <span class="quick-pill" onclick="setVal(this,'無')">無</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+
+        <!-- ==================== 六、性能檢查、荷重試驗及安定性試驗 (10 items) ==================== -->
+        <!-- 1. 無負荷運轉試驗 (2 rows) -->
+        <tr>
+          <td class="v-header" rowspan="10">六<br>、<br>性<br>能<br>檢<br>查<br>、<br>荷<br>重<br>試<br>驗<br>及<br>安<br>定<br>性<br>試<br>驗</td>
+          <td class="sub-category" rowspan="2">1.無負荷運轉試驗</td>
+          <td class="desc-cell">(1)各結構部分無鬆動異音及異常之振動現象,且動力切斷吊鉤能停止。</td>
+          <td class="result-col">
+            <div class="result-input-wrap">
+              <input type="text" class="result-input" data-key="res_6_1_1" placeholder="結果">
+              <div class="quick-pill-menu no-print">
+                <span class="quick-pill" onclick="setVal(this,'良好')">良好</span>
+                <span class="quick-pill" onclick="setVal(this,'正常')">正常</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="desc-cell">(2)各種安全裝置動作正常、功能無異狀。</td>
+          <td class="result-col">
+            <div class="result-input-wrap">
+              <input type="text" class="result-input" data-key="res_6_1_2" placeholder="結果">
+              <div class="quick-pill-menu no-print">
+                <span class="quick-pill" onclick="setVal(this,'良好')">良好</span>
+                <span class="quick-pill" onclick="setVal(this,'正常')">正常</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+
+        <!-- 2. 荷重試驗 (3 rows) -->
+        <tr>
+          <td class="sub-category" rowspan="3">2.荷重試驗</td>
+          <td class="desc-cell">
+            <div class="desc-p nowrap-line">(1)主/輔捲以額定荷重<input type="text" class="inline-input w-num-sm" id="load_test_main_t">／<input type="text" class="inline-input w-num-sm" id="load_test_aux_t">公噸×1.25倍，</div>
+            <div class="desc-p nowrap-line">伸臂長度<input type="text" class="inline-input w-num-sm" id="load_test_boom_len1">／<input type="text" class="inline-input w-num-sm" id="load_test_boom_len2">公尺，作業半徑<input type="text" class="inline-input w-num-sm" id="load_test_radius1">／<input type="text" class="inline-input w-num-sm" id="load_test_radius2">公尺實施試驗。</div>
+          </td>
+          <td class="result-col">
+            <div class="result-input-wrap">
+              <input type="text" class="result-input" data-key="res_6_2_1" placeholder="結果">
+              <div class="quick-pill-menu no-print">
+                <span class="quick-pill" onclick="setVal(this,'良好')">良好</span>
+                <span class="quick-pill" onclick="setVal(this,'正常')">正常</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="desc-cell">(2)荷重試驗時，所有裝置動作正常，運轉圓滑，無異常噪音。</td>
+          <td class="result-col">
+            <div class="result-input-wrap">
+              <input type="text" class="result-input" data-key="res_6_2_2" placeholder="結果">
+              <div class="quick-pill-menu no-print">
+                <span class="quick-pill" onclick="setVal(this,'良好')">良好</span>
+                <span class="quick-pill" onclick="setVal(this,'正常')">正常</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="desc-cell">
+            <div class="desc-p nowrap-line">額定速率：吊升(m/min)：<input type="text" class="inline-input w-num-sm" id="speed_hoist">；起伏(度/min)：<input type="text" class="inline-input w-num-sm" id="speed_derrick"></div>
+            <div class="desc-p nowrap-line">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;旋轉(r.p.m)：<input type="text" class="inline-input w-num-sm" id="speed_rotate">；行走(m/min) ：<input type="text" class="inline-input w-num-sm" id="speed_travel"></div>
+          </td>
+          <td class="result-col">
+            <div class="result-input-wrap">
+              <input type="text" class="result-input" data-key="res_6_2_3" placeholder="結果">
+              <div class="quick-pill-menu no-print">
+                <span class="quick-pill" onclick="setVal(this,'良好')">良好</span>
+                <span class="quick-pill" onclick="setVal(this,'正常')">正常</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+
+        <!-- 3. 制動性能試驗 (1 row) -->
+        <tr>
+          <td class="sub-category">3.制動性能試驗</td>
+          <td class="desc-cell">荷重吊舉時遮斷動力各動作能確實安全剎車。</td>
+          <td class="result-col">
+            <div class="result-input-wrap">
+              <input type="text" class="result-input" data-key="res_6_3" placeholder="結果">
+              <div class="quick-pill-menu no-print">
+                <span class="quick-pill" onclick="setVal(this,'良好')">良好</span>
+                <span class="quick-pill" onclick="setVal(this,'正常')">正常</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+
+        <!-- 4. 安定度 (4 rows) -->
+        <tr>
+          <td class="sub-category" rowspan="4">4.安定度</td>
+          <td class="desc-cell nowrap-line">(1)以1.27倍額定荷重於最不利位置實施測試,機具穩定無明顯浮距產生。前方安定度<input type="text" class="inline-input w-num-md" id="stability_front">mm</td>
+          <td class="result-col">
+            <div class="result-input-wrap">
+              <input type="text" class="result-input" data-key="res_6_4_1" placeholder="結果">
+              <div class="quick-pill-menu no-print">
+                <span class="quick-pill" onclick="setVal(this,'良好')">良好</span>
+                <span class="quick-pill" onclick="setVal(this,'正常')">正常</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="desc-cell nowrap-line">(2)水上起重機以額定荷重實施測試，翻倒端之乾舷高度在30㎝以上。實測<input type="text" class="inline-input w-num-xs" id="stability_water_freeboard">㎝</td>
+          <td class="result-col">
+            <div class="result-input-wrap">
+              <input type="text" class="result-input" data-key="res_6_4_2" placeholder="結果">
+              <div class="quick-pill-menu no-print">
+                <span class="quick-pill" onclick="setVal(this,'良好')">良好</span>
+                <span class="quick-pill" onclick="setVal(this,'正常')">正常</span>
+                <span class="quick-pill" onclick="setVal(this,'無')">無</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="desc-cell">(3)構造部分無裂痕、挫曲、變形或損傷,具良好之剛性。</td>
+          <td class="result-col">
+            <div class="result-input-wrap">
+              <input type="text" class="result-input" data-key="res_6_4_3" placeholder="結果">
+              <div class="quick-pill-menu no-print">
+                <span class="quick-pill" onclick="setVal(this,'良好')">良好</span>
+                <span class="quick-pill" onclick="setVal(this,'正常')">正常</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="desc-cell">(4)左右安定度符合規定</td>
+          <td class="result-col">
+            <div class="result-input-wrap">
+              <input type="text" class="result-input" data-key="res_6_4_4" placeholder="結果">
+              <div class="quick-pill-menu no-print">
+                <span class="quick-pill" onclick="setVal(this,'良好')">良好</span>
+                <span class="quick-pill" onclick="setVal(this,'正常')">正常</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+
+        <!-- ==================== 七、其他 (4 items) ==================== -->
+        <!-- 1. 車輪阻擋器、攀登梯、階梯、走道(跨載機、橋式機) (2 rows) -->
+        <tr>
+          <td class="v-header" rowspan="4">七<br>、<br>其<br>他</td>
+          <td class="sub-category" rowspan="2">1.車輪阻擋器、攀登梯、階梯、走道<br><small>(跨載機、橋式機)</small></td>
+          <td class="desc-cell">(1)車輪阻擋器、攀登梯、階梯、走道及欄杆等部份符合固定式起重機構造標準相關規定,走道面無踩倒、滑倒、絆倒之危險。</td>
+          <td class="result-col">
+            <div class="result-input-wrap">
+              <input type="text" class="result-input" data-key="res_7_1_1" placeholder="結果">
+              <div class="quick-pill-menu no-print">
+                <span class="quick-pill" onclick="setVal(this,'良好')">良好</span>
+                <span class="quick-pill" onclick="setVal(this,'正常')">正常</span>
+                <span class="quick-pill" onclick="setVal(this,'無')">無</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="desc-cell">(2)檢點台無物體飛落及人體墜落危害且堅固，並達到充分維修檢點之功能。</td>
+          <td class="result-col">
+            <div class="result-input-wrap">
+              <input type="text" class="result-input" data-key="res_7_1_2" placeholder="結果">
+              <div class="quick-pill-menu no-print">
+                <span class="quick-pill" onclick="setVal(this,'良好')">良好</span>
+                <span class="quick-pill" onclick="setVal(this,'正常')">正常</span>
+                <span class="quick-pill" onclick="setVal(this,'無')">無</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+
+        <!-- 2. 標示 (2 rows) -->
+        <tr>
+          <td class="sub-category" rowspan="2">2.標示</td>
+          <td class="desc-cell">(1)適當位置有荷重性能表。</td>
+          <td class="result-col">
+            <div class="result-input-wrap">
+              <input type="text" class="result-input" data-key="res_7_2_1" placeholder="結果">
+              <div class="quick-pill-menu no-print">
+                <span class="quick-pill" onclick="setVal(this,'良好')">良好</span>
+                <span class="quick-pill" onclick="setVal(this,'正常')">正常</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="desc-cell">(2)有明顯標示機械編號、吊升荷重等。</td>
+          <td class="result-col">
+            <div class="result-input-wrap">
+              <input type="text" class="result-input" data-key="res_7_2_2" placeholder="結果">
+              <div class="quick-pill-menu no-print">
+                <span class="quick-pill" onclick="setVal(this,'良好')">良好</span>
+                <span class="quick-pill" onclick="setVal(this,'正常')">正常</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+
+      </tbody>
+    </table>
+
+    <!-- 簽章區表格 -->
+    <table class="sheet-table">
+      <colgroup>
+        <col style="width: 33.33%;">
+        <col style="width: 33.33%;">
+        <col style="width: 33.34%;">
+      </colgroup>
+      <tbody>
+        <tr>
+          <td class="sign-cell">
+            <div class="sign-label">檢查人員簽章：</div>
+            <div class="sign-input-container">
+              <input type="text" class="full-input sign-input" id="inspector_sign" placeholder="檢查人員簽名或蓋章">
+            </div>
+          </td>
+          <td class="sign-cell">
+            <div class="sign-label">檢查單位簽章 ：</div>
+            <div class="sign-input-container">
+              <input type="text" class="full-input sign-input" id="inspection_unit_sign" placeholder="檢查單位用印">
+            </div>
+          </td>
+          <td class="sign-cell">
+            <div class="sign-label">設置事業單位簽章：</div>
+            <div class="sign-input-container">
+              <input type="text" class="full-input sign-input" id="owner_unit_sign" placeholder="設置事業單位用印">
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <div style="display: flex; align-items: center; gap: 4px;">
+              <span style="font-weight: 600; white-space: nowrap;">檢查日期：</span>
+              <input type="text" class="inline-input w-num-lg" id="inspector_date" placeholder="年   月   日">
+            </div>
+          </td>
+          <td>
+            <div style="display: flex; align-items: center; gap: 4px;">
+              <span style="font-weight: 600; white-space: nowrap;">檢查日期：</span>
+              <input type="text" class="inline-input w-num-lg" id="unit_date" placeholder="年   月   日">
+            </div>
+          </td>
+          <td>
+            <div style="display: flex; align-items: center; gap: 4px;">
+              <span style="font-weight: 600; white-space: nowrap;">日期：</span>
+              <input type="text" class="inline-input w-num-lg" id="owner_date" placeholder="年   月   日">
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- 頁尾表單編號 -->
+    <div class="footer-bar">
+      <div>表單編號：P3-61-41A</div>
+      <div class="footer-code">98.10</div>
+    </div>
+
+  </div> <!-- /form-page -->
+</div> <!-- /container -->
+
+<!-- JavaScript 功能 -->
+<script>
+  // 快速填入文字
+  function setVal(el, val) {
+    const wrap = el.closest('.result-input-wrap');
+    if (wrap) {
+      const input = wrap.querySelector('.result-input');
+      if (input) {
+        input.value = val;
+        triggerAutoSave();
+      }
+    }
+  }
+
+  // 批次填入所有檢查結果
+  function fillAllResults(val) {
+    const inputs = document.querySelectorAll('.result-input');
+    inputs.forEach(input => {
+      input.value = val;
+    });
+    showToast(`已將所有檢查結果填入「${val || '清空'}」`);
+    triggerAutoSave();
+  }
+
+  // 填入完整範例資料
+  function fillDemoData() {
+    const today = new Date();
+    const rocYear = today.getFullYear() - 1911;
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    const dateStr = `${rocYear} 年 ${month} 月 ${day} 日`;
+
+    // 基本資料
+    setValue('company_name', '台灣重工機械股份有限公司');
+    setValue('machine_no', 'MC-2026-008');
+    setValue('company_address', '高雄市小港區大業北路 100 號');
+    setValue('stamp_no', 'ST-889922');
+    setValue('machine_type', '油壓伸臂式輪胎式起重機');
+    setValue('hoisting_capacity', '2.93');
+
+    // 尺寸與實測數據
+    setValue('dim_main_boom_len', '21.5');
+    setValue('dim_aux_boom_len', '3.5');
+    setValue('dim_aux_boom_count', '1');
+    setValue('dim_angle_min', '1');
+    setValue('dim_angle_max', '78');
+    setValue('dim_max_radius', '19.8');
+    setValue('dim_rotate_limit', '360');
+
+    setValue('hook_b1', '52.0');
+    setValue('hook_h1', '68.5');
+    setValue('hook_b3', '46.0');
+    setValue('hook_h2', '60.0');
+    setValue('hook_opening', '65.0');
+    setValue('hook_weight', '0.08');
+
+    setValue('engine_power', '110');
+    setValue('drum_dia', '260');
+    setValue('sheave_dia', '280');
+
+    setCheck('overload_valve', true);
+    setCheck('overload_other_chk', false);
+    setValue('overload_other_text', '');
+
+    setValue('rope_main_strands', '6');
+    setValue('rope_main_nom_dia', '10');
+    setValue('rope_main_act_dia', '10.1');
+    setValue('rope_aux_strands', '6');
+    setValue('rope_aux_nom_dia', '10');
+    setValue('rope_aux_act_dia', '10.0');
+    setValue('rope_derrick_strands', '6');
+    setValue('rope_derrick_nom_dia', '12');
+    setValue('rope_derrick_act_dia', '12.2');
+    setValue('rope_support_strands', '6');
+    setValue('rope_support_nom_dia', '10');
+    setValue('rope_support_act_dia', '10.0');
+
+    setValue('chain_act_dia', '8.0');
+    setValue('chain_5pitch', '120.5');
+    setValue('chain_6pitch', '152.0');
+
+    setValue('load_test_main_t', '2.93');
+    setValue('load_test_aux_t', '1.5');
+    setValue('load_test_boom_len1', '8.5');
+    setValue('load_test_boom_len2', '15.0');
+    setValue('load_test_radius1', '3.5');
+    setValue('load_test_radius2', '6.0');
+
+    setValue('speed_hoist', '35');
+    setValue('speed_derrick', '40');
+    setValue('speed_rotate', '2.2');
+    setValue('speed_travel', '15');
+
+    setValue('stability_front', '12');
+    setValue('stability_water_freeboard', '35');
+
+    // 檢查結果填入良好
+    document.querySelectorAll('.result-input').forEach(input => {
+      input.value = 'V';
+    });
+
+    // 簽章
+    setValue('inspector_sign', '陳志明 (技師)');
+    setValue('inspection_unit_sign', '中華起重升降安全檢驗協會');
+    setValue('owner_unit_sign', '台灣重工機械 (股) 公司');
+
+    setValue('inspector_date', dateStr);
+    setValue('unit_date', dateStr);
+    setValue('owner_date', dateStr);
+
+    showToast('已填入範例資料');
+    triggerAutoSave();
+  }
+
+  function setValue(id, val) {
+    const el = document.getElementById(id);
+    if (el) el.value = val;
+  }
+
+  function setCheck(id, checked) {
+    const el = document.getElementById(id);
+    if (el) el.checked = checked;
+  }
+
+  // 收集表單所有資料為物件
+  function collectFormData() {
+    const data = {
+      inputs: {},
+      checkboxes: {},
+      results: {}
+    };
+
+    // 收集所有標準 input[type=text], number
+    document.querySelectorAll('input[type="text"]:not(.result-input), input[type="number"]').forEach(input => {
+      if (input.id) {
+        data.inputs[input.id] = input.value;
+      }
+    });
+
+    // 收集 checkbox
+    document.querySelectorAll('input[type="checkbox"]').forEach(chk => {
+      if (chk.id) {
+        data.checkboxes[chk.id] = chk.checked;
+      }
+    });
+
+    // 收集檢查結果
+    document.querySelectorAll('.result-input').forEach(input => {
+      const key = input.getAttribute('data-key');
+      if (key) {
+        data.results[key] = input.value;
+      }
+    });
+
+    return data;
+  }
+
+  // 復原資料至表單
+  function applyFormData(data) {
+    if (!data) return;
+
+    if (data.inputs) {
+      for (const [id, val] of Object.entries(data.inputs)) {
+        setValue(id, val);
+      }
+    }
+
+    if (data.checkboxes) {
+      for (const [id, checked] of Object.entries(data.checkboxes)) {
+        setCheck(id, checked);
+      }
+    }
+
+    if (data.results) {
+      for (const [key, val] of Object.entries(data.results)) {
+        const input = document.querySelector(`.result-input[data-key="${key}"]`);
+        if (input) input.value = val;
+      }
+    }
+  }
+
+  // LocalStorage 儲存與載入
+  const STORAGE_KEY = 'crane_self_inspection_record_draft';
+
+  function saveToLocalStorage() {
+    const data = collectFormData();
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      showToast('草稿已儲存至瀏覽器！');
+    } catch (e) {
+      alert('儲存草稿失敗：' + e.message);
+    }
+  }
+
+  function loadFromLocalStorage() {
+    try {
+      const json = localStorage.getItem(STORAGE_KEY);
+      if (!json) {
+        showToast('尚無儲存的草稿');
+        return;
+      }
+      const data = JSON.parse(json);
+      applyFormData(data);
+      showToast('已載入先前儲存的草稿！');
+    } catch (e) {
+      alert('載入草稿失敗：' + e.message);
+    }
+  }
+
+  // JSON 檔案匯出
+  function exportDataJSON() {
+    const data = collectFormData();
+    const machineNo = document.getElementById('machine_no')?.value || '未填編號';
+    const jsonStr = JSON.stringify(data, null, 2);
+    const blob = new Blob([jsonStr], { type: 'application/json;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `移動式起重機自行檢查紀錄_${machineNo}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast('已匯出 JSON 備份檔！');
+  }
+
+  // JSON 檔案匯入
+  function importDataJSON(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      try {
+        const data = JSON.parse(e.target.result);
+        applyFormData(data);
+        showToast('資料匯入成功！');
+      } catch (err) {
+        alert('匯入失敗，請確認檔案格式是否正確：' + err.message);
+      }
+    };
+    reader.readAsText(file);
+    event.target.value = '';
+  }
+
+  // 清空表單
+  function clearForm() {
+    if (!confirm('確定要清空所有填寫內容嗎？')) return;
+    document.querySelectorAll('input[type="text"], input[type="number"]').forEach(input => {
+      input.value = '';
+    });
+    document.querySelectorAll('input[type="checkbox"]').forEach(chk => {
+      chk.checked = false;
+    });
+    showToast('表單已清空');
+    triggerAutoSave();
+  }
+
+  // 提示訊息顯示
+  let toastTimer = null;
+  function showToast(msg) {
+    const toast = document.getElementById('statusToast');
+    if (!toast) return;
+    toast.textContent = msg;
+    toast.style.opacity = '1';
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => {
+      toast.style.opacity = '0';
+    }, 3000);
+  }
+
+  // 自動存檔防抖動
+  let autoSaveTimer = null;
+  function triggerAutoSave() {
+    clearTimeout(autoSaveTimer);
+    autoSaveTimer = setTimeout(() => {
+      const data = collectFormData();
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      } catch (e) {}
+    }, 800);
+  }
+
+  // 監聽變更自動存檔
+  document.addEventListener('input', triggerAutoSave);
+  document.addEventListener('change', triggerAutoSave);
+
+  // 頁面載入時嘗試載入草稿或預設今天日期
+  window.addEventListener('DOMContentLoaded', () => {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      try {
+        applyFormData(JSON.parse(saved));
+        showToast('已自動恢復上次填寫草稿');
+      } catch (e) {}
+    } else {
+      // 填寫今日日期
+      const today = new Date();
+      const rocYear = today.getFullYear() - 1911;
+      const month = String(today.getMonth() + 1).padStart(2, '0');
+      const day = String(today.getDate()).padStart(2, '0');
+      const dateStr = `${rocYear} 年 ${month} 月 ${day} 日`;
+      setValue('inspector_date', dateStr);
+      setValue('unit_date', dateStr);
+      setValue('owner_date', dateStr);
+    }
+  });
+</script>
+<script src="result-toggle.js?v=20261004y"></script>
+
+</body>
+</html>

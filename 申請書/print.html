@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<script src="../shared/case-bridge.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>危險性機械檢查申請書（列印版）</title>
+<script src="../shared/tw-zip.js"></script>
+<style>
+  @page { size: A4 portrait; margin: 0; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: #e5e7eb; }
+  body { font-family: "PMingLiU", "MingLiU", "新細明體", "Noto Serif TC", serif; color: #000; }
+  .toolbar { position: sticky; top: 0; background: #1e40af; color: #fff; padding: 8px 14px; display: flex; gap: 10px; align-items: center; font-family: "Microsoft JhengHei", sans-serif; font-size: 14px; z-index: 5; }
+  .toolbar button { background: #fff; color: #1e40af; border: 0; border-radius: 5px; padding: 6px 12px; font-weight: 700; cursor: pointer; font-family: inherit; }
+  .a4 { width: 210mm; height: 297mm; margin: 12px auto; background: #fff; padding: 7mm 13mm 6mm 15mm; box-shadow: 0 2px 10px rgba(0,0,0,.2); display: flex; flex-direction: column; overflow: hidden; }
+  h1 { font-family: "DFKai-SB", "BiauKai", "標楷體", "Microsoft JhengHei", serif; text-align: center; font-size: 21pt; margin: 2mm 0 2.5mm; letter-spacing: 1px; font-weight: 700; }
+  .frame { border: 2.2pt solid #000; flex: 1; display: flex; flex-direction: column; }
+  .kinds { padding: 1mm 1mm; font-size: 11.8pt; line-height: 1.55; border-bottom: 1pt solid #000; letter-spacing: 0; }
+  .kinds .g { white-space: nowrap; margin-right: 1.6mm; }
+  .kinds small { font-size: 7pt; }
+  table.f { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 11.5pt; }
+  table.f td { border: 1pt solid #000; padding: .6mm 1.2mm; vertical-align: middle; height: 10.2mm; }
+  table.f tr:first-child td { border-top: 0; }
+  table.f td:first-child { border-left: 0; }
+  table.f td:last-child { border-right: 0; }
+  .lbl { white-space: nowrap; }
+  .jl { display: flex; justify-content: space-between; }
+  .jl i { font-style: normal; }
+  .lbl small { display: block; font-size: 8pt; text-align: center; letter-spacing: 0; }
+  .small { font-size: 9.5pt; }
+  .r { text-align: right; }
+  .c { text-align: center; }
+  .u { text-decoration: underline; }
+  .sub td { height: 6.6mm !important; }
+  .dash { border-bottom: 1pt dashed #000 !important; }
+  .chk { font-size: 11pt; }
+  .tail { flex: 1; display: flex; flex-direction: column; padding: 2mm 2mm 1.5mm 2mm; border-top: 1pt solid #000; font-size: 12pt; position: relative; }
+  .to { margin: 3mm 0 0 13mm; font-size: 13.5pt; }
+  .ag { font-size: 13pt; margin: .8mm 0 0 5mm; }
+  .ag2 { font-size: 11.5pt; margin-left: 7mm; line-height: 1.5; }
+  .ag2 .red { color: #d00; }
+  .ag2 a { color: #00c; }
+  .notice { position: absolute; right: 2mm; top: 2mm; border: 1.6pt dotted #d00; padding: 1.2mm 3mm; font-size: 10.5pt; line-height: 1.5; }
+  .notice b { color: #d00; font-size: 13pt; }
+  .notice .red { color: #d00; }
+  .co { margin: 3mm 0 0 34mm; font-size: 12pt; line-height: 2.05; }
+  .co > div { display: flex; }
+  .co span.k { display: inline-flex; justify-content: space-between; width: 36mm; }
+  .co span.k i { font-style: normal; }
+  .seal { position: absolute; right: 18mm; top: 46mm; border: 1pt solid #d00; color: #000; padding: 1mm 1.4mm; font-size: 14pt; }
+  .date { display: flex; justify-content: space-between; margin: 3mm 7mm 2mm 5mm; font-size: 12pt; }
+  .notes { font-size: 10pt; line-height: 1.55; margin-top: auto; }
+  .notes .red { color: #d00; }
+  .notes b.red { font-size: 12pt; }
+  .notes div { padding-left: 7mm; text-indent: -7mm; }
+  .free { font-size: 9pt; margin: 2mm 0 1mm; }
+  table.recv { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 12pt; border: 2.2pt solid #000; border-bottom-width: 2.2pt; }
+  table.recv td { border: 1pt solid #000; text-align: center; height: 7mm; }
+  table.recv tr.big td { height: 17mm; }
+  .formno { display: flex; justify-content: flex-end; font-size: 9pt; font-family: "Times New Roman", serif; }
+  .formno span { border: .8pt solid #000; border-top: 0; padding: 0 4mm; }
+  @media print { html, body { background: #fff; } .toolbar { display: none; } .a4 { margin: 0; box-shadow: none; } }
+</style>
+</head>
+<body>
+<div class="toolbar"><b>危險性機械檢查申請書（A4 列印版）</b><button onclick="window.print()">🖨️ 列印 / 存成 PDF</button><span style="font-size:12px;opacity:.85">內容來自「檢查申請書」頁面，修改請回該頁。</span></div>
+<div class="a4" id="sheet"></div>
+<script>
+(function () {
+  let d = null; try { d = JSON.parse(localStorage.getItem('apply_form_draft') || 'null'); } catch (e) {}
+  const v = (d && d.values) || {}, ck = (d && d.checked) || {};
+  const e = (s) => String(s == null ? '' : s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+  const g = (k) => e(v[k] || '');
+  const box = (on) => on ? '☑' : '☐';
+  const J = (t) => '<span class="jl">' + (t.match(/\([^)]*\)|./g) || []).map(x => '<i>' + x + '</i>').join('') + '</span>';
+  const roc = (y, m, dd) => (v[y] || v[m] || v[dd]) ? `${e(v[y])} 年 ${e(v[m])} 月 ${e(v[dd])} 日` : '';
+  const county = v.addr_county || (window.TW_ZIP ? TW_ZIP.countyFromAddress(v.address || '') : '');
+  const A = (window.TW_ZIP && TW_ZIP.agencyFor(county)) || { name: '', address: '', tel: '', fax: '' };
+  const mt = v.machineType || 'm2';
+  const now = new Date();
+  document.getElementById('sheet').innerHTML = `
+  <h1>危險性機械檢查申請書</h1>
+  <div class="frame">
+    <div class="kinds">
+      <span class="g">${box(mt === 'm1')}固定式起重機</span><span class="g">${box(mt === 'm2')}移動式起重機</span><span class="g">${box(mt === 'm3')}營建用升降機</span><span class="g">${box(mt === 'm4')}吊籠</span><span class="g">${box(mt === 'm5')}營建用提升機</span><br>
+      <span class="g">${box(ck.t1)}定期檢查</span><span class="g">${box(ck.t2)}變更檢查</span><span class="g">${box(ck.t3)}重新檢查</span><span class="g">${box(ck.t4 !== false)}既有機械檢查</span><span class="g">${box(ck.t5)}竣工檢查<small>(註4)</small></span><span class="g">${box(ck.t6)}複查</span><span class="g">${box(ck.t7)}休息日檢查</span>
+    </div>
+    <table class="f">
+      <colgroup><col style="width:24%"><col style="width:13%"><col style="width:13%"><col style="width:12%"><col style="width:10%"><col style="width:6%"><col style="width:8%"><col style="width:14%"></colgroup>
+      <tr class="sub"><td class="lbl" rowspan="3">${J('種類及型式')}</td><td colspan="2" rowspan="3">${g('type_model')}</td>
+        <td colspan="2" class="chk" style="border-bottom:0">☑吊升荷重</td><td colspan="3" rowspan="2" class="r dash">${g('load')} 公噸</td></tr>
+      <tr class="sub"><td colspan="2" class="chk" style="border-top:0">☐積載荷重</td></tr>
+      <tr class="sub"><td colspan="2" class="chk small">☐ 導軌或升降路高度</td><td colspan="3" class="r">${g('height')} 公尺</td></tr>
+      <tr><td class="lbl">${J('構造號碼(10碼)')}</td><td colspan="2">${g('structure_no')}</td><td colspan="2" class="lbl">${J('檢查合格證')}${J('有效期限')}</td><td colspan="3"></td></tr>
+      <tr><td class="lbl">${J('機械編號(13碼)')}</td><td colspan="2">${g('machine_no')}</td><td colspan="2" class="lbl">${J('希望受檢日期')}<small>(如未填寫由本會安排)</small></td><td colspan="3">${roc('req_y', 'req_m', 'req_d')}</td></tr>
+      <tr><td class="lbl">${J('設置地址或')}${J('受檢地點')}</td><td colspan="7">${g('address')}</td></tr>
+      <tr><td class="lbl">${J('檢查通知寄達地址')}</td><td colspan="7">${g('mail_address')}</td></tr>
+      <tr><td class="lbl">${J('承辦人')}</td><td colspan="2">${g('contact')}</td><td colspan="3" class="small">電話：${g('tel')}<br>手機：${g('mobile')}</td><td colspan="2">傳真：${g('fax')}</td></tr>
+      <tr><td class="lbl">${J('機具保養廠商')}<small>(無者免填)</small></td><td colspan="7" class="small">公　司：${g('maintenance_comp')}<br>連絡人：${g('maintenance_contact')}　　電話：${g('maintenance_tel')}</td></tr>
+      <tr><td class="lbl">${J('機具變更部分')}<small>(申請變更檢查者填寫)</small></td><td colspan="2">${g('changed_parts')}</td><td colspan="2" class="lbl">${J('停止使用期間')}<small>(申請重新檢查者填寫)</small></td><td colspan="3"></td></tr>
+      <tr><td class="lbl">${J('前次檢查代檢員')}</td><td>${g('prev_inspector')}</td><td class="c">檢查費</td><td colspan="2" class="r">${g('fee')} 元</td><td colspan="2" class="lbl" style="padding:0 2mm">${J('備註')}</td><td>${g('note')}</td></tr>
+    </table>
+    <div class="tail">
+      <div class="notice">※支票匯票抬頭：<b>勞動部職業安全衛生署</b><br>※請填承辦人手機號碼，以便傳簡訊通知。</div>
+      <div class="to">此致</div>
+      <div class="ag">${e(A.name)}</div>
+      <div class="ag2">地址：${e(A.address)}（代行檢查組）<br>電話：${e(A.tel)}　傳真：${e(A.fax)}　<span class="red">代檢機構共同網站：</span><a>https://www.aia.org.tw</a></div>
+      <div class="co">
+        <div><span class="k"><i>事</i><i>業</i><i>單</i><i>位</i><i>名</i><i>稱</i></span>：${g('company')}</div>
+        <div><span class="k"><i>統</i><i>一</i><i>編</i><i>號</i></span>：${g('tax_id')}</div>
+        <div><span class="k"><i>收</i><i>據</i><i>抬</i><i>頭</i></span>：${g('receipt_title')}</div>
+        <div><span class="k"><i>收</i><i>據</i><i>寄</i><i>發</i><i>地</i><i>址</i></span>：${g('receipt_address')}</div>
+      </div>
+      <div class="seal">印</div>
+      <div class="date"><span>中</span><span>華</span><span>民</span><span>國</span><span>${now.getFullYear() - 1911}</span><span>年</span><span>${now.getMonth() + 1}</span><span>月</span><span>${now.getDate()}</span><span>日</span></div>
+      <div class="notes">
+        <div>註：1.申請定期檢查，請將檢查費以<span class="red">郵局匯票</span>、<span class="red">即期支票(寄發申請當天之票期)</span>連同本申請書於合格證有效期限屆滿前一個月(或以上)郵寄至「${e(A.name)}」。</div>
+        <div>　　2.支票、匯票受款人請以正楷書寫：<b class="red">勞動部職業安全衛生署。</b></div>
+        <div>　　3.每座機具填寫一張申請書，各項檢查規費請參照本申請書背面之收費基準表。</div>
+        <div>　　4.有效期限屆滿前三個月內之危險性機械或設備皆可同時提出申請，辦理完竣者，自檢查合格證有效期限屆滿日之次日起算。</div>
+      </div>
+    </div>
+  </div>
+  <div class="free">(下欄事業單位免填)</div>
+  <table class="recv"><colgroup><col style="width:28%"><col style="width:12%"><col style="width:12%"><col style="width:12%"><col style="width:12%"><col style="width:24%"></colgroup>
+    <tr><td style="text-align:justify;text-align-last:justify;padding:0 2mm">收文</td><td>收　件</td><td>收　費</td><td>排　程</td><td>檢查日期</td><td>代檢員</td></tr>
+    <tr class="big"><td></td><td></td><td></td><td></td><td></td><td></td></tr></table>
+  <div class="formno"><span>表單編號</span><span>P3-61-08E</span><span>113.05</span></div>`;
+})();
+</script>
+</body>
+</html>
