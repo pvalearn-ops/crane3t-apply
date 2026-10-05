@@ -1,0 +1,2220 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <script src="../shared/case-bridge.js"></script>
+<meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>移動式起重機照片引導與尺寸標註系統</title>
+  <style>
+    :root {
+      --primary: #1a4fa0;
+      --primary-dark: #0f3570;
+      --primary-light: #e9eef7;
+      --accent: #f59e0b;
+      --accent-hover: #d97706;
+      --success: #10b981;
+      --danger: #ef4444;
+      --dark: #1e293b;
+      --gray-50: #f8fafc;
+      --gray-100: #f1f5f9;
+      --gray-200: #e2e8f0;
+      --gray-300: #cbd5e1;
+      --gray-600: #475569;
+      --gray-700: #334155;
+      --gray-800: #1e293b;
+      --radius: 8px;
+      --shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -2px rgba(0,0,0,0.1);
+      --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Microsoft JhengHei", "PingFang TC", "Noto Sans TC", sans-serif;
+      background-color: var(--gray-100);
+      color: var(--gray-800);
+      line-height: 1.5;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* 頂部導覽列 */
+    header {
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: white;
+      padding: 12px 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .header-content {
+      max-width: 1400px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-icon {
+      background: var(--accent);
+      color: #000;
+      font-weight: 900;
+      width: 38px;
+      height: 38px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+
+    .brand-text h1 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+
+    .brand-text p {
+      font-size: 0.75rem;
+      opacity: 0.85;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    /* 主流程導覽分頁 */
+    .step-nav-wrapper {
+      background: white;
+      border-bottom: 1px solid var(--gray-200);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+
+    .step-nav {
+      max-width: 1400px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      padding: 0;
+      list-style: none;
+    }
+
+    @media (max-width: 768px) {
+      .step-nav {
+        grid-template-columns: repeat(4, 1fr);
+        overflow-x: auto;
+      }
+    }
+
+    .step-item {
+      padding: 12px 16px;
+      text-align: center;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      border-bottom: 3px solid transparent;
+      transition: all 0.2s;
+      user-select: none;
+    }
+
+    .step-item:hover {
+      background-color: var(--gray-50);
+    }
+
+    .step-item.active {
+      border-bottom-color: var(--primary);
+      background-color: var(--primary-light);
+      color: var(--primary-dark);
+      font-weight: 700;
+    }
+
+    .step-item.completed .step-badge {
+      background-color: var(--success);
+      color: white;
+    }
+
+    .step-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: var(--gray-200);
+      color: var(--gray-700);
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .step-item.active .step-badge {
+      background: var(--primary);
+      color: white;
+    }
+
+    .step-title {
+      font-size: 0.9rem;
+      white-space: nowrap;
+    }
+
+    .step-desc {
+      font-size: 0.7rem;
+      color: var(--gray-600);
+      white-space: nowrap;
+    }
+
+    /* 主要容器 */
+    main {
+      max-width: 1400px;
+      margin: 20px auto;
+      padding: 0 16px 40px;
+      flex: 1;
+      width: 100%;
+    }
+
+    .step-panel {
+      display: none;
+      animation: fadeIn 0.25s ease-in-out;
+    }
+
+    .step-panel.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* 卡片設計 */
+    .card {
+      background: white;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      border: 1px solid var(--gray-200);
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+
+    .card-header {
+      padding: 14px 20px;
+      background: var(--gray-50);
+      border-bottom: 1px solid var(--gray-200);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .card-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--gray-800);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .card-subtitle {
+      font-size: 0.8rem;
+      color: var(--gray-600);
+      margin-top: 2px;
+    }
+
+    .card-body {
+      padding: 18px 20px;
+    }
+
+    /* 工作台佈局 */
+    .workspace-grid {
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 20px;
+      align-items: start;
+    }
+
+    @media (max-width: 1024px) {
+      .workspace-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* 攝影機與畫布區域 */
+    .viewport-container {
+      position: relative;
+      width: 100%;
+      background: #0f172a;
+      border-radius: var(--radius);
+      overflow: hidden;
+      aspect-ratio: 4 / 3;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: inset 0 2px 8px rgba(0,0,0,0.5);
+    }
+
+    @media (min-width: 1200px) {
+      .viewport-container {
+        aspect-ratio: 16 / 10;
+        max-height: 560px;
+      }
+    }
+
+    .camera-video {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: none;
+    }
+
+    .main-canvas {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+      cursor: crosshair;
+    }
+
+    /* 疊影導引層 (SVG Overlay) */
+    .overlay-svg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 10;
+      transition: opacity 0.2s;
+    }
+
+    /* 拍攝浮水印提示 */
+    .overlay-hint {
+      position: absolute;
+      top: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(15, 23, 42, 0.82);
+      color: #fff;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      z-index: 12;
+      backdrop-filter: blur(4px);
+      border: 1px solid rgba(255,255,255,0.2);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      pointer-events: none;
+    }
+
+    .overlay-hint .dot {
+      width: 8px;
+      height: 8px;
+      background: var(--accent);
+      border-radius: 50%;
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(0.9); opacity: 0.8; }
+      50% { transform: scale(1.3); opacity: 1; }
+      100% { transform: scale(0.9); opacity: 0.8; }
+    }
+
+    /* 畫布控制工具列 (底部或頂部) */
+    .viewport-controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 12px;
+      background: white;
+      border-top: 1px solid var(--gray-200);
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    /* 按鈕樣式 */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 7px 14px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      border-radius: 6px;
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: all 0.15s ease-in-out;
+      user-select: none;
+      white-space: nowrap;
+    }
+
+    .btn-primary {
+      background-color: var(--primary);
+      color: white;
+    }
+    .btn-primary:hover {
+      background-color: var(--primary-dark);
+    }
+
+    .btn-accent {
+      background-color: var(--accent);
+      color: #000;
+    }
+    .btn-accent:hover {
+      background-color: var(--accent-hover);
+    }
+
+    .btn-success {
+      background-color: var(--success);
+      color: white;
+    }
+    .btn-success:hover {
+      background-color: #059669;
+    }
+
+    .btn-danger {
+      background-color: #fee2e2;
+      color: var(--danger);
+      border-color: #fecaca;
+    }
+    .btn-danger:hover {
+      background-color: var(--danger);
+      color: white;
+    }
+
+    .btn-outline {
+      background-color: white;
+      border-color: var(--gray-300);
+      color: var(--gray-700);
+    }
+    .btn-outline:hover {
+      background-color: var(--gray-50);
+      border-color: var(--gray-600);
+    }
+
+    .btn-sm {
+      padding: 4px 10px;
+      font-size: 0.78rem;
+    }
+
+    .btn-lg {
+      padding: 10px 20px;
+      font-size: 1rem;
+    }
+
+    /* 側邊資訊與標註面板 */
+    .control-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .panel-box {
+      background: white;
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius);
+      padding: 16px;
+      box-shadow: var(--shadow);
+    }
+
+    .panel-box-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: var(--primary-dark);
+      border-bottom: 1px solid var(--gray-200);
+      padding-bottom: 6px;
+    }
+
+    /* 尺寸標註輸入控件 */
+    .form-group {
+      margin-bottom: 12px;
+    }
+
+    .form-group:last-child {
+      margin-bottom: 0;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--gray-700);
+      margin-bottom: 4px;
+    }
+
+    .input-with-unit {
+      display: flex;
+      align-items: center;
+      border: 1px solid var(--gray-300);
+      border-radius: 6px;
+      overflow: hidden;
+      background: white;
+    }
+
+    .input-with-unit:focus-within {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(26, 79, 160, 0.2);
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 8px 12px;
+      font-size: 0.95rem;
+      border: none;
+      outline: none;
+      font-weight: 600;
+      color: var(--gray-800);
+    }
+
+    .input-unit {
+      background: var(--gray-100);
+      padding: 8px 12px;
+      font-size: 0.8rem;
+      color: var(--gray-600);
+      border-left: 1px solid var(--gray-200);
+      font-weight: 600;
+    }
+
+    /* 伸縮臂格節表格 (第3步) */
+    .boom-table-container {
+      overflow-x: auto;
+      margin-top: 10px;
+    }
+
+    .boom-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+    }
+
+    .boom-table th {
+      background: var(--primary-light);
+      color: var(--primary-dark);
+      padding: 8px 10px;
+      text-align: left;
+      font-weight: 700;
+      border-bottom: 2px solid var(--primary);
+    }
+
+    .boom-table td {
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--gray-200);
+      vertical-align: middle;
+    }
+
+    .boom-table tr:hover {
+      background: var(--gray-50);
+    }
+
+    .boom-input {
+      width: 100%;
+      padding: 6px 8px;
+      border: 1px solid var(--gray-300);
+      border-radius: 4px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-align: right;
+    }
+
+    .boom-input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(26, 79, 160, 0.15);
+    }
+
+    .total-summary-card {
+      background: linear-gradient(135deg, #f8fafc, var(--primary-light));
+      border: 1px solid var(--primary);
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin-top: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .total-summary-card .label {
+      font-size: 0.85rem;
+      color: var(--primary-dark);
+      font-weight: 600;
+    }
+
+    .total-summary-card .value {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: var(--primary);
+    }
+
+    /* 指引操作提示條 */
+    .guide-tip-card {
+      background: #eff6ff;
+      border-left: 4px solid var(--primary);
+      padding: 10px 14px;
+      border-radius: 0 6px 6px 0;
+      font-size: 0.8rem;
+      color: #1e40af;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    /* 疊影調整器 */
+    .overlay-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.8rem;
+      color: var(--gray-700);
+    }
+
+    .slider {
+      flex: 1;
+      height: 4px;
+      border-radius: 2px;
+      background: var(--gray-300);
+      outline: none;
+      -webkit-appearance: none;
+    }
+
+    .slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: var(--primary);
+      cursor: pointer;
+    }
+
+    /* 報告總覽檢視 */
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      margin-bottom: 24px;
+    }
+
+    @media (max-width: 900px) {
+      .summary-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .summary-card {
+      background: white;
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .summary-card-header {
+      background: var(--gray-50);
+      padding: 10px 14px;
+      font-weight: 700;
+      font-size: 0.9rem;
+      border-bottom: 1px solid var(--gray-200);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .summary-thumb-wrapper {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 4 / 3;
+      background: #0f172a;
+      overflow: hidden;
+    }
+
+    .summary-thumb {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .summary-info {
+      padding: 14px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.85rem;
+      padding: 4px 0;
+      border-bottom: 1px dashed var(--gray-200);
+    }
+
+    .info-row:last-child {
+      border-bottom: none;
+    }
+
+    .info-label {
+      color: var(--gray-600);
+    }
+
+    .info-val {
+      font-weight: 700;
+      color: var(--primary-dark);
+    }
+
+    /* 列印專用樣式 */
+    @media print {
+      header, .step-nav-wrapper, .viewport-controls, .btn-group, .nav-buttons, .overlay-controls {
+        display: none !important;
+      }
+      body {
+        background: white;
+      }
+      main {
+        max-width: 100%;
+        margin: 0;
+        padding: 0;
+      }
+      .step-panel {
+        display: none !important;
+      }
+      #panel-4 {
+        display: block !important;
+      }
+      .summary-grid {
+        grid-template-columns: repeat(3, 1fr) !important;
+        gap: 12px;
+      }
+      .card {
+        box-shadow: none;
+        border: 1px solid #999;
+      }
+    }
+
+    /* 底部導引按鈕列 */
+    .nav-buttons {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 24px;
+      padding-top: 16px;
+      border-top: 1px solid var(--gray-200);
+    }
+
+    /* 簡易 Toast 提示 */
+    #toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: rgba(15, 23, 42, 0.9);
+      color: white;
+      padding: 10px 18px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      z-index: 1000;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      opacity: 0;
+      transform: translateY(20px);
+      transition: all 0.3s;
+      pointer-events: none;
+    }
+
+    #toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 頂部導覽列 -->
+  <header>
+    <div class="header-content">
+      <div class="brand">
+        <div class="brand-icon">🏗️</div>
+        <div class="brand-text">
+          <h1>移動式起重機 照片引導與尺寸標註系統</h1>
+          <p>符合三噸以下起重機申請規範．相機疊影導引與尺寸量測</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button class="btn btn-outline btn-sm" onclick="loadAllSamplePhotos()">
+          <span>🖼️ 載入三張範例圖</span>
+        </button>
+        <button class="btn btn-accent btn-sm" onclick="showStep(4)">
+          <span>📋 檢視總覽清冊</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- 步驟分頁導引 -->
+  <div class="step-nav-wrapper">
+    <ul class="step-nav">
+      <li class="step-item active" id="nav-step-1" onclick="showStep(1)">
+        <span class="step-badge">1</span>
+        <span class="step-title">正面照片</span>
+        <span class="step-desc">標示外伸撐腳寬度</span>
+      </li>
+      <li class="step-item" id="nav-step-2" onclick="showStep(2)">
+        <span class="step-badge">2</span>
+        <span class="step-title">側面照片</span>
+        <span class="step-desc">前輪至旋轉中心距離</span>
+      </li>
+      <li class="step-item" id="nav-step-3" onclick="showStep(3)">
+        <span class="step-badge">3</span>
+        <span class="step-title">伸臂全伸照片</span>
+        <span class="step-desc">各格節長度表格輸入</span>
+      </li>
+      <li class="step-item" id="nav-step-4" onclick="showStep(4)">
+        <span class="step-badge">4</span>
+        <span class="step-title">總覽與匯出</span>
+        <span class="step-desc">照片清冊與資料確認</span>
+      </li>
+    </ul>
+  </div>
+
+  <!-- 主要內容區 -->
+  <main>
+
+    <!-- ======================================================== -->
+    <!-- 步驟 1：正面照片 (標示外伸撐腳寬度) -->
+    <!-- ======================================================== -->
+    <section id="panel-1" class="step-panel active">
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h2 class="card-title">📸 步驟一：拍攝正面照片並標註【外伸撐腳寬度】</h2>
+            <p class="card-subtitle">請使用相機對準起重機正前方，透過虛線疊影輔助對齊，拍下後在畫面上拖曳標註左右撐腳端點水平寬度</p>
+          </div>
+          <div class="overlay-controls">
+            <span>疊影透明度：</span>
+            <input type="range" class="slider" id="overlay-slider-1" min="0" max="100" value="70" oninput="updateOverlayOpacity(1, this.value)">
+            <button class="btn btn-outline btn-sm" id="btn-toggle-overlay-1" onclick="toggleOverlay(1)">隱藏疊影</button>
+          </div>
+        </div>
+
+        <div class="card-body">
+          <div class="guide-tip-card">
+            <span>💡</span>
+            <div><strong>拍攝指引：</strong>請將車輛置於平坦地面並將兩側外伸撐腳完全展開。相機維持水平，使車頭居中、兩側撐腳接地墊板完全入鏡。照片拍攝完成後，可拖曳畫面上<strong>紅色端點</strong>精確標註撐腳寬度。</div>
+          </div>
+
+          <div class="workspace-grid">
+            <!-- 左側取景與標註視窗 -->
+            <div>
+              <div class="viewport-container" id="viewport-1">
+                <video id="video-1" class="camera-video" playsinline autoplay muted></video>
+                <canvas id="canvas-1" class="main-canvas"></canvas>
+
+                <!-- 正面引導虛線疊影 SVG -->
+                <svg id="svg-overlay-1" class="overlay-svg" viewBox="0 0 800 600" preserveAspectRatio="none">
+                  <!-- 地面水平基準虛線 -->
+                  <line x1="40" y1="510" x2="760" y2="510" stroke="#f59e0b" stroke-width="2.5" stroke-dasharray="8,6"/>
+                  <text x="50" y="500" fill="#f59e0b" font-size="14" font-weight="bold">地面基準線</text>
+
+                  <!-- 垂直中心對齊虛線 -->
+                  <line x1="400" y1="40" x2="400" y2="560" stroke="#38bdf8" stroke-width="2" stroke-dasharray="6,6"/>
+                  <text x="408" y="70" fill="#38bdf8" font-size="13" font-weight="bold">車輛中心線</text>
+
+                  <!-- 車頭外框示意虛線 -->
+                  <rect x="290" y="240" width="220" height="230" rx="10" fill="none" stroke="#22c55e" stroke-width="2.5" stroke-dasharray="8,6"/>
+                  <text x="360" y="270" fill="#22c55e" font-size="14" font-weight="bold">車頭置中框</text>
+
+                  <!-- 左右車輪示意 -->
+                  <rect x="305" y="440" width="45" height="70" rx="6" fill="rgba(255,255,255,0.05)" stroke="#38bdf8" stroke-width="1.5" stroke-dasharray="4,4"/>
+                  <rect x="450" y="440" width="45" height="70" rx="6" fill="rgba(255,255,255,0.05)" stroke="#38bdf8" stroke-width="1.5" stroke-dasharray="4,4"/>
+
+                  <!-- 左撐腳導引虛線 -->
+                  <path d="M 290 380 L 130 380 L 130 510" fill="none" stroke="#f43f5e" stroke-width="2.5" stroke-dasharray="8,6"/>
+                  <rect x="100" y="500" width="60" height="15" fill="none" stroke="#f43f5e" stroke-width="2" stroke-dasharray="4,4"/>
+                  <text x="80" y="475" fill="#f43f5e" font-size="13" font-weight="bold">左撐腳目標</text>
+
+                  <!-- 右撐腳導引虛線 -->
+                  <path d="M 510 380 L 670 380 L 670 510" fill="none" stroke="#f43f5e" stroke-width="2.5" stroke-dasharray="8,6"/>
+                  <rect x="640" y="500" width="60" height="15" fill="none" stroke="#f43f5e" stroke-width="2" stroke-dasharray="4,4"/>
+                  <text x="635" y="475" fill="#f43f5e" font-size="13" font-weight="bold">右撐腳目標</text>
+
+                  <!-- 撐腳跨距雙向標註指引箭頭 -->
+                  <line x1="130" y1="540" x2="670" y2="540" stroke="#f59e0b" stroke-width="2.5" stroke-dasharray="6,4"/>
+                  <polygon points="130,540 142,534 142,546" fill="#f59e0b"/>
+                  <polygon points="670,540 658,534 658,546" fill="#f59e0b"/>
+                  <text x="330" y="565" fill="#f59e0b" font-size="14" font-weight="bold">← 稱腳寬度(水平距離) →</text>
+                </svg>
+
+                <div class="overlay-hint" id="hint-1">
+                  <span class="dot"></span>
+                  <span>相機對齊疊影模式中</span>
+                </div>
+              </div>
+
+              <!-- 底部操作按鈕 -->
+              <div class="viewport-controls">
+                <div class="btn-group">
+                  <button class="btn btn-primary" id="btn-camera-1" onclick="toggleCamera(1)">
+                    <span>📷 開啟相機</span>
+                  </button>
+                  <button class="btn btn-accent" id="btn-capture-1" style="display:none;" onclick="capturePhoto(1)">
+                    <span>📸 立即拍照</span>
+                  </button>
+                  <label class="btn btn-outline">
+                    <span>📁 上傳照片</span>
+                    <input type="file" accept="image/*,application/pdf" style="display:none;" onchange="handleFileUpload(1, event)">
+                  </label>
+                  <button class="btn btn-outline" onclick="loadSamplePhoto(1)">
+                    <span>🖼️ 載入正面範例圖</span>
+                  </button>
+                </div>
+                <div class="btn-group">
+                  <button class="btn btn-outline btn-sm" onclick="resetMarkers(1)">🔄 重設標註點</button>
+                  <button class="btn btn-outline btn-sm" onclick="downloadCanvasImage(1)">💾 下載照片</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- 右側標註數值設定 -->
+            <div class="control-panel">
+              <div class="panel-box">
+                <div class="panel-box-title">
+                  <span>📐 正面尺寸標註</span>
+                  <span class="step-badge">1</span>
+                </div>
+                
+                <div class="form-group">
+                  <label class="form-label">外伸稱腳寬度 (水平跨距)</label>
+                  <div class="input-with-unit">
+                    <input type="number" class="form-control" id="val-front-outrigger" value="3400" step="10" min="0" oninput="updateAnnotationData(1)">
+                    <span class="input-unit">mm (公釐)</span>
+                  </div>
+                  <small style="color:var(--gray-600);font-size:0.75rem;margin-top:4px;display:block;">以左右稱腳中心或最外緣之水平距離為準</small>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">撐腳展開狀態</label>
+                  <select class="form-control" id="val-front-status" style="border:1px solid var(--gray-300);border-radius:6px;" onchange="updateAnnotationData(1)">
+                    <option value="全伸 (Maximum)">全伸 (Maximum)</option>
+                    <option value="中伸 (Intermediate)">中伸 (Intermediate)</option>
+                    <option value="最小伸出 (Minimum)">最小伸出 (Minimum)</option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">備註說明</label>
+                  <input type="text" class="form-control" id="val-front-note" value="左右撐腳完全伸出量測" style="border:1px solid var(--gray-300);border-radius:6px;" oninput="updateAnnotationData(1)">
+                </div>
+
+                <div style="background:var(--gray-50);padding:10px;border-radius:6px;font-size:0.75rem;color:var(--gray-600);line-height:1.4;">
+                  <strong>💡 標註提示：</strong><br>
+                  在左側照片中點擊並拖曳<strong>左/右端點</strong>，標註線會即時依輸入的寬度繪製雙向箭頭與工程引線。
+                </div>
+              </div>
+
+              <button class="btn btn-primary btn-lg" style="width:100%;" onclick="showStep(2)">
+                <span>下一步：側面照片標註 ➔</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================== -->
+    <!-- 步驟 2：側面照片 (標示前輪到起重機旋轉中心水平距離) -->
+    <!-- ======================================================== -->
+    <section id="panel-2" class="step-panel">
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h2 class="card-title">📸 步驟二：拍攝側面照片並標註【前輪至起重機旋轉中心水平距離】</h2>
+            <p class="card-subtitle">請對準起重機側面全景，透過虛線疊影定位前輪與起重機旋轉中心柱，拍攝後拖曳端點標註水平距離</p>
+          </div>
+          <div class="overlay-controls">
+            <span>疊影透明度：</span>
+            <input type="range" class="slider" id="overlay-slider-2" min="0" max="100" value="70" oninput="updateOverlayOpacity(2, this.value)">
+            <button class="btn btn-outline btn-sm" id="btn-toggle-overlay-2" onclick="toggleOverlay(2)">隱藏疊影</button>
+          </div>
+        </div>
+
+        <div class="card-body">
+          <div class="guide-tip-card">
+            <span>💡</span>
+            <div><strong>拍攝指引：</strong>請退至車輛正側面適當距離，使前輪中心、起重機旋轉立柱中心及後輪軸均完整入鏡。拍下後拖曳兩個<strong>黃/紅色端點</strong>，分別對齊「前輪中心軸」與「起重機旋轉立柱中心」。</div>
+          </div>
+
+          <div class="workspace-grid">
+            <!-- 取景與標註視窗 -->
+            <div>
+              <div class="viewport-container" id="viewport-2">
+                <video id="video-2" class="camera-video" playsinline autoplay muted></video>
+                <canvas id="canvas-2" class="main-canvas"></canvas>
+
+                <!-- 側面引導虛線疊影 SVG -->
+                <svg id="svg-overlay-2" class="overlay-svg" viewBox="0 0 800 600" preserveAspectRatio="none">
+                  <!-- 地面基準線 -->
+                  <line x1="40" y1="520" x2="760" y2="520" stroke="#f59e0b" stroke-width="2.5" stroke-dasharray="8,6"/>
+
+                  <!-- 車頭與車廂側輪廓虛線 -->
+                  <path d="M 60 480 L 60 320 L 130 300 L 230 300 L 230 480 Z" fill="none" stroke="#22c55e" stroke-width="2" stroke-dasharray="8,6"/>
+                  <text x="110" y="340" fill="#22c55e" font-size="13" font-weight="bold">駕駛室側面</text>
+
+                  <!-- 車斗框線 -->
+                  <rect x="310" y="380" width="430" height="100" fill="none" stroke="#38bdf8" stroke-width="2" stroke-dasharray="8,6"/>
+                  <text x="480" y="420" fill="#38bdf8" font-size="13" font-weight="bold">車斗貨床</text>
+
+                  <!-- 前輪定位圓形目標 (重要) -->
+                  <circle cx="160" cy="485" r="45" fill="rgba(239, 68, 68, 0.1)" stroke="#ef4444" stroke-width="2.5" stroke-dasharray="6,4"/>
+                  <circle cx="160" cy="485" r="4" fill="#ef4444"/>
+                  <line x1="160" y1="200" x2="160" y2="540" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="4,4"/>
+                  <text x="115" y="240" fill="#ef4444" font-size="13" font-weight="bold">前輪中心軸</text>
+
+                  <!-- 起重機旋轉中心柱 (重要) -->
+                  <rect x="250" y="240" width="45" height="240" fill="rgba(245, 158, 11, 0.15)" stroke="#f59e0b" stroke-width="2.5" stroke-dasharray="6,4"/>
+                  <line x1="272" y1="180" x2="272" y2="540" stroke="#f59e0b" stroke-width="2" stroke-dasharray="4,4"/>
+                  <circle cx="272" cy="485" r="4" fill="#f59e0b"/>
+                  <text x="240" y="210" fill="#f59e0b" font-size="13" font-weight="bold">旋轉中心</text>
+
+                  <!-- 後輪定位目標 -->
+                  <circle cx="610" cy="485" r="45" fill="none" stroke="#38bdf8" stroke-width="2" stroke-dasharray="6,4"/>
+
+                  <!-- 吊臂上揚導引虛線 -->
+                  <path d="M 272 260 L 400 100" stroke="#eab308" stroke-width="2.5" stroke-dasharray="8,6"/>
+
+                  <!-- 前輪到旋轉中心水平距離標註線 -->
+                  <line x1="160" y1="555" x2="272" y2="555" stroke="#ec4899" stroke-width="2.5"/>
+                  <polygon points="160,555 170,550 170,560" fill="#ec4899"/>
+                  <polygon points="272,555 262,550 262,560" fill="#ec4899"/>
+                  <text x="140" y="580" fill="#ec4899" font-size="13" font-weight="bold">← 前輪到旋轉中心距離 →</text>
+                </svg>
+
+                <div class="overlay-hint" id="hint-2">
+                  <span class="dot"></span>
+                  <span>側面相機疊影導引模式中</span>
+                </div>
+              </div>
+
+              <!-- 底部控制按鈕 -->
+              <div class="viewport-controls">
+                <div class="btn-group">
+                  <button class="btn btn-primary" id="btn-camera-2" onclick="toggleCamera(2)">
+                    <span>📷 開啟相機</span>
+                  </button>
+                  <button class="btn btn-accent" id="btn-capture-2" style="display:none;" onclick="capturePhoto(2)">
+                    <span>📸 立即拍照</span>
+                  </button>
+                  <label class="btn btn-outline">
+                    <span>📁 上傳照片</span>
+                    <input type="file" accept="image/*,application/pdf" style="display:none;" onchange="handleFileUpload(2, event)">
+                  </label>
+                  <button class="btn btn-outline" onclick="loadSamplePhoto(2)">
+                    <span>🖼️ 載入側面範例圖</span>
+                  </button>
+                </div>
+                <div class="btn-group">
+                  <button class="btn btn-outline btn-sm" onclick="resetMarkers(2)">🔄 重設標註點</button>
+                  <button class="btn btn-outline btn-sm" onclick="downloadCanvasImage(2)">💾 下載照片</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- 右側設定面板 -->
+            <div class="control-panel">
+              <div class="panel-box">
+                <div class="panel-box-title">
+                  <span>📐 側面尺寸標註</span>
+                  <span class="step-badge">2</span>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">前輪中心至旋轉中心水平距離</label>
+                  <div class="input-with-unit">
+                    <input type="number" class="form-control" id="val-side-front-to-center" value="1850" step="10" min="0" oninput="updateAnnotationData(2)">
+                    <span class="input-unit">mm (公釐)</span>
+                  </div>
+                  <small style="color:var(--gray-600);font-size:0.75rem;margin-top:4px;display:block;">前輪軸心至起重機旋轉基座中心線之水平距離</small>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">軸距 (前輪中心至後輪中心，選填)</label>
+                  <div class="input-with-unit">
+                    <input type="number" class="form-control" id="val-side-wheelbase" value="3800" step="10" min="0" oninput="updateAnnotationData(2)">
+                    <span class="input-unit">mm (公釐)</span>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">備註說明</label>
+                  <input type="text" class="form-control" id="val-side-note" value="前輪軸心至起重機立柱中心" style="border:1px solid var(--gray-300);border-radius:6px;" oninput="updateAnnotationData(2)">
+                </div>
+
+                <div style="background:var(--gray-50);padding:10px;border-radius:6px;font-size:0.75rem;color:var(--gray-600);line-height:1.4;">
+                  <strong>💡 標註提示：</strong><br>
+                  左端點代表<strong>前輪軸中心</strong>，右端點代表<strong>起重機立柱旋轉軸</strong>。拖曳端點可調整標註位置。
+                </div>
+              </div>
+
+              <div style="display:flex;gap:8px;">
+                <button class="btn btn-outline btn-lg" style="flex:1;" onclick="showStep(1)">
+                  <span>⬅ 上一步</span>
+                </button>
+                <button class="btn btn-primary btn-lg" style="flex:2;" onclick="showStep(3)">
+                  <span>下一步：伸臂全伸 ➔</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================== -->
+    <!-- 步驟 3：伸臂全伸照片 (在右邊出現表格，讓使用者輸入格節長度，預設5節，可加減) -->
+    <!-- ======================================================== -->
+    <section id="panel-3" class="step-panel">
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h2 class="card-title">📸 步驟三：拍攝【伸臂全伸照片】並輸入各格節長度表格</h2>
+            <p class="card-subtitle">將起重機伸臂全部伸出水平放置拍照，右側表格提供格節長度輸入（預設 5 節，可自由加減節數）</p>
+          </div>
+          <div class="overlay-controls">
+            <span>疊影透明度：</span>
+            <input type="range" class="slider" id="overlay-slider-3" min="0" max="100" value="70" oninput="updateOverlayOpacity(3, this.value)">
+            <button class="btn btn-outline btn-sm" id="btn-toggle-overlay-3" onclick="toggleOverlay(3)">隱藏疊影</button>
+          </div>
+        </div>
+
+        <div class="card-body">
+          <div class="guide-tip-card">
+            <span>💡</span>
+            <div><strong>拍攝指引：</strong>請將起重機所有伸縮臂節完全伸展，保持水平或適當揚角。拍攝全景照片確保<strong>基臂至最前端吊鉤</strong>均完整呈現。右側表格可填寫每節伸臂長度，系統將自動計算伸臂總長度。</div>
+          </div>
+
+          <div class="workspace-grid">
+            <!-- 取景與標註視窗 -->
+            <div>
+              <div class="viewport-container" id="viewport-3">
+                <video id="video-3" class="camera-video" playsinline autoplay muted></video>
+                <canvas id="canvas-3" class="main-canvas"></canvas>
+
+                <!-- 伸臂全伸引導虛線疊影 SVG -->
+                <svg id="svg-overlay-3" class="overlay-svg" viewBox="0 0 800 600" preserveAspectRatio="none">
+                  <!-- 地面線 -->
+                  <line x1="30" y1="520" x2="770" y2="520" stroke="#f59e0b" stroke-width="2.5" stroke-dasharray="8,6"/>
+
+                  <!-- 車身位置參考虛線 -->
+                  <rect x="50" y="380" width="230" height="120" fill="none" stroke="#38bdf8" stroke-width="2" stroke-dasharray="8,6"/>
+                  <text x="120" y="440" fill="#38bdf8" font-size="13" font-weight="bold">車身底盤</text>
+
+                  <!-- 起重機旋轉立柱 -->
+                  <rect x="250" y="270" width="40" height="230" fill="none" stroke="#f59e0b" stroke-width="2" stroke-dasharray="6,4"/>
+
+                  <!-- 全伸伸縮臂水平導引外框 (分節示意) -->
+                  <!-- 第1節 (基臂) -->
+                  <rect x="260" y="240" width="110" height="36" fill="rgba(245, 158, 11, 0.1)" stroke="#f59e0b" stroke-width="2" stroke-dasharray="6,4"/>
+                  <text x="290" y="262" fill="#f59e0b" font-size="11" font-weight="bold">1節</text>
+
+                  <!-- 第2節 -->
+                  <rect x="365" y="243" width="95" height="30" fill="rgba(245, 158, 11, 0.08)" stroke="#f59e0b" stroke-width="2" stroke-dasharray="6,4"/>
+                  <text x="400" y="262" fill="#f59e0b" font-size="11" font-weight="bold">2節</text>
+
+                  <!-- 第3節 -->
+                  <rect x="455" y="245" width="95" height="26" fill="rgba(245, 158, 11, 0.08)" stroke="#f59e0b" stroke-width="2" stroke-dasharray="6,4"/>
+                  <text x="490" y="262" fill="#f59e0b" font-size="11" font-weight="bold">3節</text>
+
+                  <!-- 第4節 -->
+                  <rect x="545" y="247" width="95" height="22" fill="rgba(245, 158, 11, 0.08)" stroke="#f59e0b" stroke-width="2" stroke-dasharray="6,4"/>
+                  <text x="580" y="262" fill="#f59e0b" font-size="11" font-weight="bold">4節</text>
+
+                  <!-- 第5節 (頂節+滑輪) -->
+                  <rect x="635" y="249" width="95" height="18" fill="rgba(245, 158, 11, 0.08)" stroke="#f59e0b" stroke-width="2" stroke-dasharray="6,4"/>
+                  <text x="670" y="262" fill="#f59e0b" font-size="11" font-weight="bold">5節</text>
+
+                  <!-- 吊鉤示意 -->
+                  <line x1="725" y1="267" x2="725" y2="350" stroke="#f43f5e" stroke-width="2" stroke-dasharray="4,4"/>
+                  <circle cx="725" cy="365" r="14" fill="none" stroke="#f43f5e" stroke-width="2"/>
+                  <text x="700" y="395" fill="#f43f5e" font-size="12" font-weight="bold">吊鉤</text>
+
+                  <!-- 全長水平標註線 -->
+                  <line x1="260" y1="210" x2="730" y2="210" stroke="#22c55e" stroke-width="2.5"/>
+                  <polygon points="260,210 272,205 272,215" fill="#22c55e"/>
+                  <polygon points="730,210 718,205 718,215" fill="#22c55e"/>
+                  <text x="440" y="200" fill="#22c55e" font-size="13" font-weight="bold">← 伸臂全伸長度範圍 →</text>
+                </svg>
+
+                <div class="overlay-hint" id="hint-3">
+                  <span class="dot"></span>
+                  <span>伸臂全伸相機疊影模式中</span>
+                </div>
+              </div>
+
+              <!-- 底部控制按鈕 -->
+              <div class="viewport-controls">
+                <div class="btn-group">
+                  <button class="btn btn-primary" id="btn-camera-3" onclick="toggleCamera(3)">
+                    <span>📷 開啟相機</span>
+                  </button>
+                  <button class="btn btn-accent" id="btn-capture-3" style="display:none;" onclick="capturePhoto(3)">
+                    <span>📸 立即拍照</span>
+                  </button>
+                  <label class="btn btn-outline">
+                    <span>📁 上傳照片</span>
+                    <input type="file" accept="image/*,application/pdf" style="display:none;" onchange="handleFileUpload(3, event)">
+                  </label>
+                  <button class="btn btn-outline" onclick="loadSamplePhoto(3)">
+                    <span>🖼️ 載入全伸範例圖</span>
+                  </button>
+                </div>
+                <div class="btn-group">
+                  <button class="btn btn-outline btn-sm" onclick="resetMarkers(3)">🔄 重設標註點</button>
+                  <button class="btn btn-outline btn-sm" onclick="downloadCanvasImage(3)">💾 下載照片</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- 右側表格面板 (需求重點：在右邊出現表格，讓使用者輸入格節長度，預設是5節，可讓使用者操作加減) -->
+            <div class="control-panel">
+              <div class="panel-box">
+                <div class="panel-box-title">
+                  <span>📊 伸臂各格節長度表格</span>
+                  <span class="step-badge" id="badge-section-count">5 節</span>
+                </div>
+
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                  <span style="font-size:0.8rem;color:var(--gray-600);font-weight:600;">節次設定與長度明細：</span>
+                  <div class="btn-group">
+                    <button class="btn btn-success btn-sm" onclick="addBoomSection()" title="新增一節伸臂">
+                      <span>➕ 新增一節</span>
+                    </button>
+                    <button class="btn btn-danger btn-sm" onclick="removeBoomSection()" title="刪除最後一節伸臂">
+                      <span>➖ 刪除一節</span>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- 伸臂長度輸入表格 -->
+                <div class="boom-table-container">
+                  <table class="boom-table" id="boom-sections-table">
+                    <thead>
+                      <tr>
+                        <th style="width:75px;">節次</th>
+                        <th>長度 (mm)</th>
+                        <th style="width:40px;text-align:center;">刪除</th>
+                      </tr>
+                    </thead>
+                    <tbody id="boom-table-body">
+                      <!-- 動態由 JavaScript 生成，預設 5 節 -->
+                    </tbody>
+                  </table>
+                </div>
+
+                <!-- 伸臂長度總和統計 -->
+                <div class="total-summary-card">
+                  <div>
+                    <div class="label">伸臂總長度 (合計)</div>
+                    <small style="font-size:0.7rem;color:var(--gray-600);">所有格節長度之加總</small>
+                  </div>
+                  <div class="value" id="boom-total-length">10,850 mm</div>
+                </div>
+
+                <div class="form-group" style="margin-top:12px;">
+                  <label class="form-label">全縮長度 (選填)</label>
+                  <div class="input-with-unit">
+                    <input type="number" class="form-control" id="val-boom-retracted" value="3150" step="10" min="0" oninput="updateAnnotationData(3)">
+                    <span class="input-unit">mm</span>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">標記於照片上之文字</label>
+                  <input type="text" class="form-control" id="val-boom-note" value="5節式伸縮臂 (全伸狀態)" style="border:1px solid var(--gray-300);border-radius:6px;" oninput="updateAnnotationData(3)">
+                </div>
+              </div>
+
+              <div style="display:flex;gap:8px;">
+                <button class="btn btn-outline btn-lg" style="flex:1;" onclick="showStep(2)">
+                  <span>⬅ 上一步</span>
+                </button>
+                <button class="btn btn-primary btn-lg" style="flex:2;" onclick="showStep(4)">
+                  <span>完成並檢視總覽 ➔</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================== -->
+    <!-- 步驟 4：總覽與報告輸出 (Summary & Export) -->
+    <!-- ======================================================== -->
+    <section id="panel-4" class="step-panel">
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h2 class="card-title">📋 步驟四：照片標註總覽與清冊報告</h2>
+            <p class="card-subtitle">檢視三方位已標註之照片及相關尺寸數據，可直接列印報告或下載已合成標註的照片檔案</p>
+          </div>
+          <div class="btn-group">
+            <button class="btn btn-primary" onclick="window.print()">
+              <span>🖨️ 列印報告</span>
+            </button>
+            <button class="btn btn-success" onclick="downloadAllPhotos()">
+              <span>📥 一鍵下載全部標註照片</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="card-body">
+          <!-- 三張照片卡片清單 -->
+          <div class="summary-grid">
+            
+            <!-- 正面照總覽 -->
+            <div class="summary-card">
+              <div class="summary-card-header">
+                <span>1. 正面照片 (稱腳寬度)</span>
+                <button class="btn btn-outline btn-sm" onclick="showStep(1)">✏️ 編輯</button>
+              </div>
+              <div class="summary-thumb-wrapper">
+                <img id="summary-img-1" class="summary-thumb" alt="正面照片">
+              </div>
+              <div class="summary-info">
+                <div>
+                  <div class="info-row">
+                    <span class="info-label">照片方位：</span>
+                    <span class="info-val">車輛正前方</span>
+                  </div>
+                  <div class="info-row">
+                    <span class="info-label">稱腳水平寬度：</span>
+                    <span class="info-val" id="sum-front-width">3,400 mm</span>
+                  </div>
+                  <div class="info-row">
+                    <span class="info-label">撐腳展開狀態：</span>
+                    <span class="info-val" id="sum-front-status">全伸 (Maximum)</span>
+                  </div>
+                </div>
+                <button class="btn btn-outline btn-sm" style="width:100%;margin-top:8px;" onclick="downloadCanvasImage(1)">💾 下載標註圖 (正面.jpg)</button>
+              </div>
+            </div>
+
+            <!-- 側面照總覽 -->
+            <div class="summary-card">
+              <div class="summary-card-header">
+                <span>2. 側面照片 (前輪至旋轉中心)</span>
+                <button class="btn btn-outline btn-sm" onclick="showStep(2)">✏️ 編輯</button>
+              </div>
+              <div class="summary-thumb-wrapper">
+                <img id="summary-img-2" class="summary-thumb" alt="側面照片">
+              </div>
+              <div class="summary-info">
+                <div>
+                  <div class="info-row">
+                    <span class="info-label">照片方位：</span>
+                    <span class="info-val">車輛正側面</span>
+                  </div>
+                  <div class="info-row">
+                    <span class="info-label">前輪至旋轉中心：</span>
+                    <span class="info-val" id="sum-side-dist">1,850 mm</span>
+                  </div>
+                  <div class="info-row">
+                    <span class="info-label">標註備註：</span>
+                    <span class="info-val" id="sum-side-note">前輪軸心至立柱中心</span>
+                  </div>
+                </div>
+                <button class="btn btn-outline btn-sm" style="width:100%;margin-top:8px;" onclick="downloadCanvasImage(2)">💾 下載標註圖 (側面.jpg)</button>
+              </div>
+            </div>
+
+            <!-- 伸臂全伸照總覽 -->
+            <div class="summary-card">
+              <div class="summary-card-header">
+                <span>3. 伸臂全伸照片 (格節長度)</span>
+                <button class="btn btn-outline btn-sm" onclick="showStep(3)">✏️ 編輯</button>
+              </div>
+              <div class="summary-thumb-wrapper">
+                <img id="summary-img-3" class="summary-thumb" alt="伸臂全伸照片">
+              </div>
+              <div class="summary-info">
+                <div>
+                  <div class="info-row">
+                    <span class="info-label">伸臂總節數：</span>
+                    <span class="info-val" id="sum-boom-count">5 節</span>
+                  </div>
+                  <div class="info-row">
+                    <span class="info-label">伸臂總長度：</span>
+                    <span class="info-val" id="sum-boom-total">10,850 mm</span>
+                  </div>
+                  <div class="info-row">
+                    <span class="info-label">全縮長度：</span>
+                    <span class="info-val" id="sum-boom-retracted">3,150 mm</span>
+                  </div>
+                </div>
+                <button class="btn btn-outline btn-sm" style="width:100%;margin-top:8px;" onclick="downloadCanvasImage(3)">💾 下載標註圖 (伸臂全伸.jpg)</button>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- 伸臂各節長度明細卡片 (總覽呈現) -->
+          <div class="panel-box">
+            <div class="panel-box-title">
+              <span>📋 伸臂各格節長度清冊彙整</span>
+              <span class="step-badge" id="sum-boom-badge">5 節</span>
+            </div>
+            <div class="boom-table-container">
+              <table class="boom-table" id="summary-boom-table">
+                <thead>
+                  <tr>
+                    <th>節次</th>
+                    <th>節名說明</th>
+                    <th style="text-align:right;">長度 (mm)</th>
+                    <th style="text-align:right;">長度 (m)</th>
+                    <th>備註</th>
+                  </tr>
+                </thead>
+                <tbody id="summary-boom-table-body">
+                  <!-- 動態填入 -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="nav-buttons">
+            <button class="btn btn-outline btn-lg" onclick="showStep(3)">
+              <span>⬅ 返回修改伸臂照片</span>
+            </button>
+            <div class="btn-group">
+              <button class="btn btn-accent btn-lg" onclick="saveDataToStorage()">
+                <span>💾 儲存所有標註設定</span>
+              </button>
+              <button class="btn btn-primary btn-lg" onclick="window.print()">
+                <span>🖨️ 列印照片清冊</span>
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- 提示浮動窗 -->
+  <div id="toast">已儲存</div>
+
+  <script>
+    /* ========================================================
+     * 系統資料模型與全域狀態
+     * ======================================================== */
+    const state = {
+      currentStep: 1,
+      // 步驟對應之相機串流
+      streams: { 1: null, 2: null, 3: null },
+      // 影像來源 (Image 物件)
+      images: { 1: null, 2: null, 3: null },
+      // 疊影顯示狀態
+      overlayVisible: { 1: true, 2: true, 3: true },
+      overlayOpacity: { 1: 0.7, 2: 0.7, 3: 0.7 },
+      // 標註點座標 (正規化比例 0.0 ~ 1.0)
+      markers: {
+        1: {
+          p1: { x: 0.16, y: 0.82, label: "左撐腳端" },
+          p2: { x: 0.88, y: 0.82, label: "右撐腳端" }
+        },
+        2: {
+          p1: { x: 0.20, y: 0.80, label: "前輪中心" },
+          p2: { x: 0.34, y: 0.80, label: "旋轉中心" }
+        },
+        3: {
+          p1: { x: 0.32, y: 0.44, label: "基臂起點" },
+          p2: { x: 0.92, y: 0.44, label: "頂節端點" }
+        }
+      },
+      // 拖曳狀態
+      dragging: { step: null, pointKey: null },
+      // 伸臂各節長度數據 (預設 5 節)
+      boomSections: [
+        { id: 1, name: "第 1 節 (基臂)", length: 3150, note: "基節固定臂" },
+        { id: 2, name: "第 2 節 (第1伸縮臂)", length: 2000, note: "油壓外伸" },
+        { id: 3, name: "第 3 節 (第2伸縮臂)", length: 1900, note: "油壓外伸" },
+        { id: 4, name: "第 4 節 (第3伸縮臂)", length: 1900, note: "連動伸縮" },
+        { id: 5, name: "第 5 節 (最頂節)", length: 1900, note: "頂端滑輪頭" }
+      ]
+    };
+
+    // 範例照片路徑
+    const SAMPLE_PHOTOS = {
+      1: "正面.jpg",
+      2: "側面.jpg",
+      3: "伸臂全伸.jpg"
+    };
+
+    /* ========================================================
+     * 初始化與分頁切換
+     * ======================================================== */
+    window.addEventListener('DOMContentLoaded', () => {
+      initBoomTable();
+      initCanvases();
+      // 嘗試載入範例照片作為預設顯示
+      loadSamplePhoto(1, false);
+      loadSamplePhoto(2, false);
+      loadSamplePhoto(3, false);
+      
+      // 監聽視窗縮放以重新繪製畫布
+      window.addEventListener('resize', () => {
+        renderCanvas(1);
+        renderCanvas(2);
+        renderCanvas(3);
+      });
+    });
+
+    function showStep(stepNumber) {
+      state.currentStep = stepNumber;
+
+      // 更新 Nav 標籤樣式
+      document.querySelectorAll('.step-item').forEach((item, index) => {
+        if (index + 1 === stepNumber) {
+          item.classList.add('active');
+        } else {
+          item.classList.remove('active');
+        }
+      });
+
+      // 切換 Panel
+      document.querySelectorAll('.step-panel').forEach((panel, index) => {
+        if (index + 1 === stepNumber) {
+          panel.classList.add('active');
+        } else {
+          panel.classList.remove('active');
+        }
+      });
+
+      // 重新繪製當前步驟之畫布
+      if (stepNumber >= 1 && stepNumber <= 3) {
+        setTimeout(() => renderCanvas(stepNumber), 50);
+      } else if (stepNumber === 4) {
+        updateSummaryView();
+      }
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2500);
+    }
+
+    /* ========================================================
+     * 相機控制與串流擷取 (WebRTC / getUserMedia)
+     * ======================================================== */
+    async function toggleCamera(step) {
+      const video = document.getElementById(`video-${step}`);
+      const btnCamera = document.getElementById(`btn-camera-${step}`);
+      const btnCapture = document.getElementById(`btn-capture-${step}`);
+      const hint = document.getElementById(`hint-${step}`);
+
+      // 若目前已有相機串流，則關閉
+      if (state.streams[step]) {
+        stopCamera(step);
+        return;
+      }
+
+      try {
+        const constraints = {
+          video: {
+            facingMode: { ideal: "environment" },
+            width: { ideal: 1920 },
+            height: { ideal: 1080 }
+          },
+          audio: false
+        };
+
+        const stream = await navigator.mediaDevices.getUserMedia(constraints);
+        state.streams[step] = stream;
+        video.srcObject = stream;
+        video.style.display = 'block';
+        video.play();
+
+        btnCamera.innerHTML = '<span>🛑 關閉相機</span>';
+        btnCamera.classList.remove('btn-primary');
+        btnCamera.classList.add('btn-danger');
+        btnCapture.style.display = 'inline-flex';
+        
+        if (hint) {
+          hint.innerHTML = '<span class="dot"></span><span>相機已啟動，請對準疊影虛線後拍照</span>';
+        }
+        showToast('相機已開啟，請對齊疊影虛線進行拍攝');
+      } catch (err) {
+        console.error("相機存取失敗:", err);
+        alert("無法啟動相機: " + (err.message || err.name) + "\n請確認是否已允許瀏覽器使用相機權限，或使用「上傳照片 / 載入範例圖」。");
+      }
+    }
+
+    function stopCamera(step) {
+      const video = document.getElementById(`video-${step}`);
+      const btnCamera = document.getElementById(`btn-camera-${step}`);
+      const btnCapture = document.getElementById(`btn-capture-${step}`);
+      const hint = document.getElementById(`hint-${step}`);
+
+      if (state.streams[step]) {
+        state.streams[step].getTracks().forEach(track => track.stop());
+        state.streams[step] = null;
+      }
+      video.style.display = 'none';
+      btnCamera.innerHTML = '<span>📷 開啟相機</span>';
+      btnCamera.classList.add('btn-primary');
+      btnCamera.classList.remove('btn-danger');
+      btnCapture.style.display = 'none';
+
+      if (hint) {
+        hint.innerHTML = '<span class="dot"></span><span>標註編輯模式中</span>';
+      }
+    }
+
+    function capturePhoto(step) {
+      const video = document.getElementById(`video-${step}`);
+      if (!video || !state.streams[step]) return;
+
+      const tempCanvas = document.createElement('canvas');
+      tempCanvas.width = video.videoWidth || 1280;
+      tempCanvas.height = video.videoHeight || 720;
+      const ctx = tempCanvas.getContext('2d');
+      ctx.drawImage(video, 0, 0, tempCanvas.width, tempCanvas.height);
+
+      const img = new Image();
+      img.onload = () => {
+        state.images[step] = img;
+        stopCamera(step);
+        renderCanvas(step);
+        showToast(`已成功拍攝照片 ${step}，現在可進行尺寸標註`);
+      };
+      img.src = tempCanvas.toDataURL('image/jpeg', 0.95);
+    }
+
+    function handleFileUpload(step, event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          state.images[step] = img;
+          stopCamera(step);
+          renderCanvas(step);
+          showToast(`已上傳照片，請拖曳標註端點`);
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function loadSamplePhoto(step, showNotification = true) {
+      const imgPath = SAMPLE_PHOTOS[step];
+      const img = new Image();
+      img.onload = () => {
+        state.images[step] = img;
+        stopCamera(step);
+        renderCanvas(step);
+        if (showNotification) {
+          showToast(`已載入範例照片：${imgPath}`);
+        }
+      };
+      img.onerror = () => {
+        if (showNotification) {
+          showToast(`載入 ${imgPath} 失敗，請確認檔案存在`);
+        }
+      };
+      img.src = imgPath;
+    }
+
+    function loadAllSamplePhotos() {
+      loadSamplePhoto(1, false);
+      loadSamplePhoto(2, false);
+      loadSamplePhoto(3, false);
+      showToast('已載入全部三方位範例照片！');
+      setTimeout(() => renderCanvas(state.currentStep), 100);
+    }
+
+    /* ========================================================
+     * 疊影導引 (Overlay) 控制
+     * ======================================================== */
+    function updateOverlayOpacity(step, val) {
+      const svg = document.getElementById(`svg-overlay-${step}`);
+      const opacity = val / 100;
+      state.overlayOpacity[step] = opacity;
+      if (svg) {
+        svg.style.opacity = state.overlayVisible[step] ? opacity : 0;
+      }
+    }
+
+    function toggleOverlay(step) {
+      state.overlayVisible[step] = !state.overlayVisible[step];
+      const svg = document.getElementById(`svg-overlay-${step}`);
+      const btn = document.getElementById(`btn-toggle-overlay-${step}`);
+      
+      if (svg) {
+        svg.style.opacity = state.overlayVisible[step] ? state.overlayOpacity[step] : 0;
+      }
+      if (btn) {
+        btn.textContent = state.overlayVisible[step] ? '隱藏疊影' : '顯示疊影';
+      }
+    }
+
+    /* ========================================================
+     * 互動式 HTML5 Canvas 尺寸標註繪圖引擎
+     * ======================================================== */
+    function initCanvases() {
+      for (let step = 1; step <= 3; step++) {
+        const canvas = document.getElementById(`canvas-${step}`);
+        if (!canvas) continue;
+
+        // 滑鼠與觸控事件綁定
+        canvas.addEventListener('mousedown', (e) => handlePointerDown(step, e));
+        canvas.addEventListener('mousemove', (e) => handlePointerMove(step, e));
+        window.addEventListener('mouseup', () => handlePointerUp(step));
+
+        // 觸控支援
+        canvas.addEventListener('touchstart', (e) => handleTouchStart(step, e), { passive: false });
+        canvas.addEventListener('touchmove', (e) => handleTouchMove(step, e), { passive: false });
+        window.addEventListener('touchend', () => handlePointerUp(step));
+      }
+    }
+
+    function resetMarkers(step) {
+      if (step === 1) {
+        state.markers[1].p1 = { x: 0.16, y: 0.82, label: "左撐腳端" };
+        state.markers[1].p2 = { x: 0.88, y: 0.82, label: "右撐腳端" };
+      } else if (step === 2) {
+        state.markers[2].p1 = { x: 0.20, y: 0.80, label: "前輪中心" };
+        state.markers[2].p2 = { x: 0.34, y: 0.80, label: "旋轉中心" };
+      } else if (step === 3) {
+        state.markers[3].p1 = { x: 0.32, y: 0.44, label: "基臂起點" };
+        state.markers[3].p2 = { x: 0.92, y: 0.44, label: "頂節端點" };
+      }
+      renderCanvas(step);
+      showToast('標註端點已重設為預設位置');
+    }
+
+    function updateAnnotationData(step) {
+      renderCanvas(step);
+    }
+
+    function getCanvasCoordinates(step, clientX, clientY) {
+      const canvas = document.getElementById(`canvas-${step}`);
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      return {
+        x: (clientX - rect.left) * scaleX,
+        y: (clientY - rect.top) * scaleY,
+        normX: (clientX - rect.left) / rect.width,
+        normY: (clientY - rect.top) / rect.height
+      };
+    }
+
+    function handlePointerDown(step, e) {
+      const pos = getCanvasCoordinates(step, e.clientX, e.clientY);
+      checkHitAndStartDrag(step, pos.normX, pos.normY);
+    }
+
+    function handleTouchStart(step, e) {
+      if (e.touches.length === 1) {
+        const touch = e.touches[0];
+        const pos = getCanvasCoordinates(step, touch.clientX, touch.clientY);
+        if (checkHitAndStartDrag(step, pos.normX, pos.normY)) {
+          e.preventDefault();
+        }
+      }
+    }
+
+    function checkHitAndStartDrag(step, normX, normY) {
+      const markers = state.markers[step];
+      const threshold = 0.08; // 點擊感應半徑
+
+      const dist1 = Math.hypot(normX - markers.p1.x, normY - markers.p1.y);
+      const dist2 = Math.hypot(normX - markers.p2.x, normY - markers.p2.y);
+
+      if (dist1 < threshold && dist1 <= dist2) {
+        state.dragging = { step, pointKey: 'p1' };
+        return true;
+      } else if (dist2 < threshold) {
+        state.dragging = { step, pointKey: 'p2' };
+        return true;
+      }
+      return false;
+    }
+
+    function handlePointerMove(step, e) {
+      if (state.dragging.step === step && state.dragging.pointKey) {
+        const pos = getCanvasCoordinates(step, e.clientX, e.clientY);
+        updateDraggedPoint(step, pos.normX, pos.normY);
+      }
+    }
+
+    function handleTouchMove(step, e) {
+      if (state.dragging.step === step && state.dragging.pointKey && e.touches.length === 1) {
+        e.preventDefault();
+        const touch = e.touches[0];
+        const pos = getCanvasCoordinates(step, touch.clientX, touch.clientY);
+        updateDraggedPoint(step, pos.normX, pos.normY);
+      }
+    }
+
+    function updateDraggedPoint(step, normX, normY) {
+      const key = state.dragging.pointKey;
+      state.markers[step][key].x = Math.max(0.02, Math.min(0.98, normX));
+      state.markers[step][key].y = Math.max(0.02, Math.min(0.98, normY));
+      renderCanvas(step);
+    }
+
+    function handlePointerUp(step) {
+      state.dragging = { step: null, pointKey: null };
+    }
+
+    /* ========================================================
+     * Canvas 核心繪圖常式 (繪製照片、延伸線、尺寸標註線與箭頭)
+     * ======================================================== */
+    function renderCanvas(step) {
+      const canvas = document.getElementById(`canvas-${step}`);
+      if (!canvas) return;
+
+      const container = canvas.parentElement;
+      const width = container.clientWidth || 800;
+      const height = container.clientHeight || 500;
+      
+      canvas.width = width * window.devicePixelRatio;
+      canvas.height = height * window.devicePixelRatio;
+      
+      const ctx = canvas.getContext('2d');
+      ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+      ctx.clearRect(0, 0, width, height);
+
+      const img = state.images[step];
+      if (img && img.complete) {
+        // 等比例置中繪製背景照片
+        const hRatio = width / img.width;
+        const vRatio = height / img.height;
+        const ratio = Math.min(hRatio, vRatio);
+        const centerShiftX = (width - img.width * ratio) / 2;
+        const centerShiftY = (height - img.height * ratio) / 2;
+        
+        ctx.fillStyle = "#0f172a";
+        ctx.fillRect(0, 0, width, height);
+        ctx.drawImage(img, 0, 0, img.width, img.height,
+                          centerShiftX, centerShiftY, img.width * ratio, img.height * ratio);
+      } else {
+        // 未載入照片時顯示簡潔背景提示
+        ctx.fillStyle = "#1e293b";
+        ctx.fillRect(0, 0, width, height);
+        ctx.fillStyle = "#94a3b8";
+        ctx.font = "bold 16px sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText(`【請開啟相機拍照、上傳檔案或載入範例圖】`, width / 2, height / 2);
+      }
+
+      // 取得標註端點實體像素座標
+      const m = state.markers[step];
+      const p1 = { x: m.p1.x * width, y: m.p1.y * height };
+      const p2 = { x: m.p2.x * width, y: m.p2.y * height };
+
+      // 依不同步驟繪製專屬尺寸標註工程線條
+      if (step === 1) {
+        const val = document.getElementById('val-front-outrigger')?.value || "3400";
+        const labelText = `稱腳寬度 W = ${Number(val).toLocaleString()} mm`;
+        drawDimensionLine(ctx, p1, p2, labelText, '#ef4444', '#f59e0b', 'horizontal');
+      } else if (step === 2) {
+        const val = document.getElementById('val-side-front-to-center')?.value || "1850";
+        const labelText = `前輪至旋轉中心 L = ${Number(val).toLocaleString()} mm`;
+        drawDimensionLine(ctx, p1, p2, labelText, '#38bdf8', '#f59e0b', 'horizontal');
+      } else if (step === 3) {
+        const total = calculateTotalBoomLength();
+        const labelText = `伸臂全伸長度 = ${total.toLocaleString()} mm (${(total/1000).toFixed(2)} m)`;
+        drawDimensionLine(ctx, p1, p2, labelText, '#10b981', '#f59e0b', 'aligned');
+      }
+    }
+
+    /**
+     * 繪製工程尺寸線 (雙端引線、尺寸線、雙箭頭、拖曳圓形手把與標籤)
+     */
+    function drawDimensionLine(ctx, p1, p2, text, colorPrimary, colorAccent, mode = 'horizontal') {
+      ctx.save();
+
+      // 1. 繪製端點拖曳手把 (Draggable Handles)
+      [p1, p2].forEach((p, idx) => {
+        // 外發光光暈
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 14, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(239, 68, 68, 0.25)';
+        ctx.fill();
+
+        // 實心圓形標記
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 7, 0, Math.PI * 2);
+        ctx.fillStyle = colorPrimary;
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 2.5;
+        ctx.fill();
+        ctx.stroke();
+
+        // 十字中心標記
+        ctx.beginPath();
+        ctx.moveTo(p.x - 10, p.y);
+        ctx.lineTo(p.x + 10, p.y);
+        ctx.moveTo(p.x, p.y - 10);
+        ctx.lineTo(p.x, p.y + 10);
+        ctx.strokeStyle = 'rgba(255,255,255,0.8)';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+      });
+
+      // 2. 延伸引出線 (Extension lines)
+      const offset = 26; // 標註線與端點的引申距離
+      const extY = Math.max(p1.y, p2.y) + offset;
+
+      if (mode === 'horizontal') {
+        // 垂直延伸引線
+        ctx.beginPath();
+        ctx.setLineDash([4, 4]);
+        ctx.moveTo(p1.x, p1.y);
+        ctx.lineTo(p1.x, extY + 8);
+        ctx.moveTo(p2.x, p2.y);
+        ctx.lineTo(p2.x, extY + 8);
+        ctx.strokeStyle = 'rgba(255,255,255,0.75)';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // 水平尺寸標註主線
+        ctx.beginPath();
+        ctx.moveTo(p1.x, extY);
+        ctx.lineTo(p2.x, extY);
+        ctx.strokeStyle = colorAccent;
+        ctx.lineWidth = 2.5;
+        ctx.stroke();
+
+        // 雙向箭頭
+        drawArrowhead(ctx, p1.x, extY, p2.x, extY, colorAccent);
+        drawArrowhead(ctx, p2.x, extY, p1.x, extY, colorAccent);
+
+        // 尺寸文字氣泡框
+        const midX = (p1.x + p2.x) / 2;
+        const midY = extY;
+        drawTextBadge(ctx, text, midX, midY - 14, colorAccent);
+      } else {
+        // 對齊連線 (斜向或任意角度)
+        ctx.beginPath();
+        ctx.moveTo(p1.x, p1.y);
+        ctx.lineTo(p2.x, p2.y);
+        ctx.strokeStyle = colorAccent;
+        ctx.lineWidth = 2.5;
+        ctx.stroke();
+
+        drawArrowhead(ctx, p1.x, p1.y, p2.x, p2.y, colorAccent);
+        drawArrowhead(ctx, p2.x, p2.y, p1.x, p1.y, colorAccent);
+
+        const midX = (p1.x + p2.x) / 2;
+        const midY = (p1.y + p2.y) / 2;
+        drawTextBadge(ctx, text, midX, midY - 16, colorAccent);
+      }
+
+      ctx.restore();
+    }
+
+    function drawArrowhead(ctx, fromX, fromY, toX, toY, color) {
+      const headLength = 12;
+      const angle = Math.atan2(toY - fromY, toX - fromX);
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(fromX, fromY);
+      ctx.lineTo(fromX + headLength * Math.cos(angle - Math.PI / 6), fromY + headLength * Math.sin(angle - Math.PI / 6));
+      ctx.lineTo(fromX + headLength * Math.cos(angle + Math.PI / 6), fromY + headLength * Math.sin(angle + Math.PI / 6));
+      ctx.closePath();
+      ctx.fillStyle = color;
+      ctx.fill();
+      ctx.restore();
+    }
+
+    function drawTextBadge(ctx, text, x, y, badgeColor) {
+      ctx.save();
+      ctx.font = 'bold 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      const textMetrics = ctx.measureText(text);
+      const paddingH = 10;
+      const paddingV = 5;
+      const boxW = textMetrics.width + paddingH * 2;
+      const boxH = 24;
+
+      // 半透明深色底框
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
+      ctx.beginPath();
+      ctx.roundRect(x - boxW / 2, y - boxH / 2, boxW, boxH, 4);
+      ctx.fill();
+
+      // 邊框
+      ctx.strokeStyle = badgeColor;
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      // 文字
+      ctx.fillStyle = '#ffffff';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(text, x, y);
+
+      ctx.restore();
+    }
+
+    /* ========================================================
+     * 伸臂格節長度表格操作 (預設 5 節，支援加減)
+     * ======================================================== */
+    function initBoomTable() {
+      renderBoomTable();
+    }
+
+    function renderBoomTable() {
+      const tbody = document.getElementById('boom-table-body');
+      const badge = document.getElementById('badge-section-count');
+      tbody.innerHTML = '';
+
+      state.boomSections.forEach((sec, idx) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>
+            <strong>第 ${idx + 1} 節</strong>
+            <div style="font-size:0.7rem;color:var(--gray-600);">${idx === 0 ? '基臂' : (idx === state.boomSections.length - 1 ? '最頂節' : '伸縮臂')}</div>
+          </td>
+          <td>
+            <input type="number" class="boom-input" value="${sec.length}" step="50" min="0" oninput="handleBoomLengthChange(${idx}, this.value)">
+          </td>
+          <td style="text-align:center;">
+            <button class="btn btn-outline btn-sm" style="padding:2px 6px;color:var(--danger);border-color:#fca5a5;" onclick="deleteBoomSection(${idx})" ${state.boomSections.length <= 1 ? 'disabled' : ''} title="刪除此節">
+              ✕
+            </button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      if (badge) {
+        badge.textContent = `${state.boomSections.length} 節`;
+      }
+      updateBoomTotalUI();
+    }
+
+    function handleBoomLengthChange(index, value) {
+      state.boomSections[index].length = Number(value) || 0;
+      updateBoomTotalUI();
+      renderCanvas(3);
+    }
+
+    function addBoomSection() {
+      const nextIndex = state.boomSections.length + 1;
+      const lastLen = state.boomSections.length > 0 ? state.boomSections[state.boomSections.length - 1].length : 1900;
+      state.boomSections.push({
+        id: Date.now(),
+        name: `第 ${nextIndex} 節`,
+        length: lastLen,
+        note: "伸縮臂"
+      });
+      renderBoomTable();
+      renderCanvas(3);
+      showToast(`已新增第 ${nextIndex} 節伸臂`);
+    }
+
+    function removeBoomSection() {
+      if (state.boomSections.length <= 1) {
+        alert("至少需保留 1 節伸臂！");
+        return;
+      }
+      state.boomSections.pop();
+      renderBoomTable();
+      renderCanvas(3);
+      showToast('已刪除最後一節伸臂');
+    }
+
+    function deleteBoomSection(index) {
+      if (state.boomSections.length <= 1) {
+        alert("至少需保留 1 節伸臂！");
+        return;
+      }
+      state.boomSections.splice(index, 1);
+      renderBoomTable();
+      renderCanvas(3);
+      showToast(`已刪除該節伸臂`);
+    }
+
+    function calculateTotalBoomLength() {
+      return state.boomSections.reduce((sum, item) => sum + (Number(item.length) || 0), 0);
+    }
+
+    function updateBoomTotalUI() {
+      const total = calculateTotalBoomLength();
+      const el = document.getElementById('boom-total-length');
+      if (el) {
+        el.textContent = `${total.toLocaleString()} mm (${(total / 1000).toFixed(2)} m)`;
+      }
+    }
+
+    /* ========================================================
+     * 步驟 4：總覽與報告資料更新
+     * ======================================================== */
+    function updateSummaryView() {
+      // 1. 正面照片與資料
+      const frontVal = document.getElementById('val-front-outrigger')?.value || "3400";
+      const frontStatus = document.getElementById('val-front-status')?.value || "全伸 (Maximum)";
+      document.getElementById('sum-front-width').textContent = `${Number(frontVal).toLocaleString()} mm`;
+      document.getElementById('sum-front-status').textContent = frontStatus;
+      
+      // 2. 側面照片與資料
+      const sideDist = document.getElementById('val-side-front-to-center')?.value || "1850";
+      const sideNote = document.getElementById('val-side-note')?.value || "前輪軸心至立柱中心";
+      document.getElementById('sum-side-dist').textContent = `${Number(sideDist).toLocaleString()} mm`;
+      document.getElementById('sum-side-note').textContent = sideNote;
+
+      // 3. 伸臂照片與資料
+      const boomCount = state.boomSections.length;
+      const boomTotal = calculateTotalBoomLength();
+      const boomRetracted = document.getElementById('val-boom-retracted')?.value || "3150";
+      
+      document.getElementById('sum-boom-count').textContent = `${boomCount} 節`;
+      document.getElementById('sum-boom-total').textContent = `${boomTotal.toLocaleString()} mm (${(boomTotal/1000).toFixed(2)} m)`;
+      document.getElementById('sum-boom-retracted').textContent = `${Number(boomRetracted).toLocaleString()} mm`;
+      document.getElementById('sum-boom-badge').textContent = `${boomCount} 節`;
+
+      // 匯總各節表格
+      const sumTbody = document.getElementById('summary-boom-table-body');
+      sumTbody.innerHTML = '';
+      state.boomSections.forEach((sec, idx) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><strong>第 ${idx + 1} 節</strong></td>
+          <td>${idx === 0 ? '基臂 (第1節)' : (idx === boomCount - 1 ? '最頂節 (頂部滑輪)' : `中間伸縮臂`)}</td>
+          <td style="text-align:right;font-weight:700;">${Number(sec.length).toLocaleString()} mm</td>
+          <td style="text-align:right;">${(Number(sec.length)/1000).toFixed(2)} m</td>
+          <td style="color:var(--gray-600);">${sec.note || '-'}</td>
+        `;
+        sumTbody.appendChild(tr);
+      });
+
+      // 加上合計行
+      const trTotal = document.createElement('tr');
+      trTotal.style.background = 'var(--primary-light)';
+      trTotal.style.fontWeight = 'bold';
+      trTotal.innerHTML = `
+        <td colspan="2" style="color:var(--primary-dark);">伸臂全伸總長度合計</td>
+        <td style="text-align:right;color:var(--primary);font-size:1.05rem;">${boomTotal.toLocaleString()} mm</td>
+        <td style="text-align:right;color:var(--primary);font-size:1.05rem;">${(boomTotal/1000).toFixed(2)} m</td>
+        <td>共 ${boomCount} 節</td>
+      `;
+      sumTbody.appendChild(trTotal);
+
+      // 產生縮圖預覽
+      for (let s = 1; s <= 3; s++) {
+        const canvas = document.getElementById(`canvas-${s}`);
+        const imgThumb = document.getElementById(`summary-img-${s}`);
+        if (canvas && imgThumb) {
+          imgThumb.src = canvas.toDataURL('image/jpeg', 0.85);
+        }
+      }
+    }
+
+    /* ========================================================
+     * 下載與匯出功能
+     * ======================================================== */
+    function downloadCanvasImage(step) {
+      const canvas = document.getElementById(`canvas-${step}`);
+      if (!canvas) return;
+
+      const filenameMap = { 1: "正面_已標註.jpg", 2: "側面_已標註.jpg", 3: "伸臂全伸_已標註.jpg" };
+      const link = document.createElement('a');
+      link.download = filenameMap[step] || `起重機標註照片_${step}.jpg`;
+      link.href = canvas.toDataURL('image/jpeg', 0.95);
+      link.click();
+      showToast(`已下載標註照片：${link.download}`);
+    }
+
+    function downloadAllPhotos() {
+      downloadCanvasImage(1);
+      setTimeout(() => downloadCanvasImage(2), 300);
+      setTimeout(() => downloadCanvasImage(3), 600);
+      showToast('已開始下載全部 3 張標註照片');
+    }
+
+    function saveDataToStorage() {
+      const payload = {
+        front: {
+          width: document.getElementById('val-front-outrigger')?.value,
+          status: document.getElementById('val-front-status')?.value,
+          note: document.getElementById('val-front-note')?.value,
+          markers: state.markers[1]
+        },
+        side: {
+          frontToCenter: document.getElementById('val-side-front-to-center')?.value,
+          wheelbase: document.getElementById('val-side-wheelbase')?.value,
+          note: document.getElementById('val-side-note')?.value,
+          markers: state.markers[2]
+        },
+        boom: {
+          sections: state.boomSections,
+          retracted: document.getElementById('val-boom-retracted')?.value,
+          note: document.getElementById('val-boom-note')?.value,
+          markers: state.markers[3]
+        },
+        savedAt: new Date().toISOString()
+      };
+
+      try {
+        localStorage.setItem('crane_photo_annotations', JSON.stringify(payload));
+        showToast('已成功將尺寸與標註數據儲存於瀏覽器！');
+      } catch (e) {
+        showToast('儲存失敗: ' + e.message);
+      }
+    }
+  </script>
+<script src="../shared/pdf-tools.js"></script>
+<script src="case-persist.js?v=20261004r"></script>
+</body>
+</html>

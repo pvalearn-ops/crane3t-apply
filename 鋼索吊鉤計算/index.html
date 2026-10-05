@@ -1,0 +1,1909 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>移動式起重機 鋼索與吊鉤安全強度計算書</title>
+  <script src="../shared/case-bridge.js"></script>
+  <style>
+    :root {
+      --primary: #1a4fa0;
+      --primary-dark: #0f326a;
+      --accent: #2563eb;
+      --bg-page: #eef2f6;
+      --card-bg: #ffffff;
+      --border-color: #cbd5e1;
+      --border-dark: #334155;
+      --text-main: #0f172a;
+      --text-muted: #475569;
+      --ok-color: #059669;
+      --ok-bg: #d1fae5;
+      --ng-color: #dc2626;
+      --ng-bg: #fee2e2;
+      --input-bg: #fffbeb;
+      --input-border: #f59e0b;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: "Microsoft JhengHei", "微軟正黑體", "Segoe UI", Arial, sans-serif;
+      background-color: var(--bg-page);
+      color: var(--text-main);
+      line-height: 1.45;
+      font-size: 14px;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    /* ============================================================
+       TOOLBAR (SCREEN ONLY)
+       ============================================================ */
+    .toolbar {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
+      color: #ffffff;
+      padding: 10px 18px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+    }
+
+    .toolbar-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .toolbar-title {
+      font-size: 16px;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .toolbar-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      padding: 6px 13px;
+      font-size: 13px;
+      font-weight: 600;
+      border-radius: 6px;
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      font-family: inherit;
+      text-decoration: none;
+    }
+
+    .btn-primary {
+      background: #fbbf24;
+      color: #78350f;
+      border-color: #f59e0b;
+    }
+    .btn-primary:hover {
+      background: #f59e0b;
+      color: #ffffff;
+    }
+
+    .btn-light {
+      background: #ffffff;
+      color: #1e3a8a;
+    }
+    .btn-light:hover {
+      background: #e2e8f0;
+    }
+
+    .btn-outline-white {
+      background: transparent;
+      color: #ffffff;
+      border-color: rgba(255,255,255,0.4);
+    }
+    .btn-outline-white:hover {
+      background: rgba(255,255,255,0.15);
+      border-color: #ffffff;
+    }
+
+    .tab-group {
+      display: flex;
+      background: rgba(0,0,0,0.25);
+      padding: 3px;
+      border-radius: 6px;
+    }
+
+    .tab-btn {
+      background: transparent;
+      border: none;
+      color: #cbd5e1;
+      padding: 5px 12px;
+      font-size: 13px;
+      font-weight: 600;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .tab-btn.active {
+      background: #ffffff;
+      color: #1e3a8a;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+    }
+
+    .preset-select {
+      background: #ffffff;
+      color: #1e3a8a;
+      border: 1px solid #cbd5e1;
+      padding: 5px 10px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      outline: none;
+    }
+
+    /* ============================================================
+       DOCUMENT CONTAINER & PAGE STRUCTURE
+       ============================================================ */
+    .container {
+      max-width: 960px;
+      margin: 20px auto 40px;
+      padding: 0 16px;
+    }
+
+    .doc-page {
+      background: #ffffff;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      padding: 32px 36px;
+      margin-bottom: 28px;
+      position: relative;
+    }
+
+    /* Title Block */
+    .doc-header {
+      text-align: center;
+      border-bottom: 2px solid #0f172a;
+      padding-bottom: 12px;
+      margin-bottom: 18px;
+    }
+
+    .doc-title {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: 2px;
+      color: #0f172a;
+      margin-bottom: 4px;
+    }
+
+    .doc-subtitle {
+      font-size: 13px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .doc-meta-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 16px;
+      font-size: 13px;
+    }
+
+    .doc-meta-table td {
+      padding: 4px 8px;
+      border: 1px solid #cbd5e1;
+    }
+
+    .doc-meta-table .lbl {
+      background: #f1f5f9;
+      font-weight: 600;
+      width: 15%;
+      text-align: right;
+    }
+
+    .doc-meta-table .val {
+      width: 35%;
+    }
+
+    /* Section Headings */
+    .sec-title {
+      font-size: 16px;
+      font-weight: 700;
+      background: #f1f5f9;
+      color: #1e3a8a;
+      border-left: 5px solid #1e3a8a;
+      padding: 6px 12px;
+      margin: 16px 0 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* Input & Table styles */
+    .calc-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 12px;
+      font-size: 13px;
+    }
+
+    .calc-table th, .calc-table td {
+      border: 1px solid #cbd5e1;
+      padding: 6px 8px;
+      text-align: center;
+      vertical-align: middle;
+    }
+
+    .calc-table th {
+      background: #e2e8f0;
+      font-weight: 700;
+      color: #1e293b;
+    }
+
+    .calc-table tr:nth-child(even) td {
+      background: #f8fafc;
+    }
+
+    .text-left { text-align: left !important; }
+    .text-right { text-align: right !important; }
+    .text-center { text-align: center !important; }
+
+    /* Inputs */
+    .num-input, .text-input, select.mat-select {
+      width: 90px;
+      padding: 4px 6px;
+      border: 1px solid #94a3b8;
+      border-radius: 4px;
+      text-align: center;
+      font-size: 13px;
+      font-weight: 700;
+      color: #1e40af;
+      background: var(--input-bg);
+      font-family: inherit;
+      transition: border 0.15s, box-shadow 0.15s;
+    }
+
+    .num-input:focus, .text-input:focus, select.mat-select:focus {
+      outline: none;
+      border-color: #2563eb;
+      box-shadow: 0 0 0 2px rgba(37,99,235,0.2);
+    }
+
+    .text-input {
+      width: 140px;
+      text-align: left;
+    }
+
+    select.mat-select {
+      width: 110px;
+      cursor: pointer;
+    }
+
+    /* Split layout: inputs vs diagrams */
+    .split-layout {
+      display: grid;
+      grid-template-columns: 1fr 300px;
+      gap: 16px;
+      margin-bottom: 12px;
+      align-items: start;
+    }
+
+    @media (max-width: 820px) {
+      .split-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .diagram-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      padding: 10px;
+      align-items: center;
+      text-align: center;
+    }
+
+    .diagram-img {
+      max-width: 100%;
+      height: auto;
+      border: 1px solid #e2e8f0;
+      border-radius: 4px;
+      background: #ffffff;
+    }
+
+    .diagram-caption {
+      font-size: 11px;
+      color: #64748b;
+      margin-top: 2px;
+    }
+
+    .sub-diagrams {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      width: 100%;
+    }
+
+    .sub-diag-box {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* Formula & Calculation Steps */
+    .steps-container {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin: 10px 0;
+    }
+
+    .step-row {
+      display: flex;
+      align-items: center;
+      padding: 5px 8px;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 4px;
+      font-size: 13.5px;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .step-row:nth-child(odd) {
+      background: #fbfcfe;
+    }
+
+    .step-row.highlight {
+      background: #eff6ff;
+      border-color: #bfdbfe;
+    }
+
+    .step-no {
+      font-weight: 700;
+      color: #1e3a8a;
+      min-width: 28px;
+    }
+
+    .step-label {
+      min-width: 160px;
+      font-weight: 600;
+      color: #334155;
+    }
+
+    .step-formula {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      flex-grow: 1;
+      font-family: "Cambria Math", "Times New Roman", "Segoe UI", serif;
+      font-size: 14px;
+      color: #0f172a;
+    }
+
+    .step-result {
+      font-weight: 700;
+      color: #1e3a8a;
+      min-width: 110px;
+      text-align: right;
+      font-size: 14px;
+    }
+
+    .step-unit {
+      color: #64748b;
+      font-size: 12.5px;
+      min-width: 55px;
+      margin-left: 2px;
+    }
+
+    /* Math fraction rendering */
+    .frac {
+      display: inline-flex;
+      flex-direction: column;
+      vertical-align: middle;
+      text-align: center;
+      padding: 0 4px;
+      font-size: 0.92em;
+    }
+
+    .frac-top {
+      border-bottom: 1.5px solid #334155;
+      padding-bottom: 1px;
+    }
+
+    .frac-bot {
+      padding-top: 1px;
+    }
+
+    .sup {
+      vertical-align: super;
+      font-size: 0.75em;
+      margin-left: 1px;
+    }
+
+    .sub {
+      vertical-align: sub;
+      font-size: 0.75em;
+      margin-left: 1px;
+    }
+
+    /* Badges */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 3px 10px;
+      border-radius: 9999px;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+
+    .badge-ok {
+      background-color: var(--ok-bg);
+      color: var(--ok-color);
+      border: 1px solid #86efac;
+    }
+
+    .badge-ng {
+      background-color: var(--ng-bg);
+      color: var(--ng-color);
+      border: 1px solid #fca5a5;
+    }
+
+    /* Summary Card / Conclusion Block */
+    .summary-card {
+      margin: 14px 0 10px;
+      padding: 12px 16px;
+      border-radius: 6px;
+      border: 1.5px solid #cbd5e1;
+      background: #f8fafc;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .summary-title {
+      font-weight: 700;
+      font-size: 14px;
+      color: #1e3a8a;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 10px;
+      margin-top: 4px;
+    }
+
+    .summary-item {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 4px;
+      padding: 8px 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .summary-item .item-title {
+      font-weight: 600;
+      color: #475569;
+    }
+
+    .summary-item .item-val {
+      font-weight: 700;
+      font-size: 15px;
+    }
+
+    /* Signatures Table */
+    .sign-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+      font-size: 12.5px;
+    }
+
+    .sign-table td {
+      border: 1px solid #94a3b8;
+      padding: 6px 8px;
+      text-align: center;
+      height: 48px;
+      vertical-align: middle;
+    }
+
+    .sign-table .sign-lbl {
+      background: #f1f5f9;
+      font-weight: 600;
+      height: auto;
+      padding: 4px 6px;
+    }
+
+    .note-box {
+      margin-top: 10px;
+      font-size: 11.5px;
+      color: #64748b;
+      line-height: 1.4;
+      border-top: 1px dashed #cbd5e1;
+      padding-top: 6px;
+    }
+
+    /* ============================================================
+       PRINT MEDIA QUERY (PIXEL PERFECT A4 OUTPUT)
+       ============================================================ */
+    @page {
+      size: A4 portrait;
+      margin: 10mm 12mm 10mm 12mm;
+    }
+
+    @media print {
+      body {
+        background: #ffffff !important;
+        font-size: 12px !important;
+        color: #000000 !important;
+      }
+
+      .no-print, .toolbar {
+        display: none !important;
+      }
+
+      .container {
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+      }
+
+      .doc-page {
+        box-shadow: none !important;
+        border: none !important;
+        padding: 0 0 10mm 0 !important;
+        margin: 0 !important;
+        page-break-after: always;
+        break-after: page;
+      }
+
+      .doc-page:last-child {
+        page-break-after: avoid;
+        break-after: avoid;
+      }
+
+      /* When filtering tabs, hide non-active pages in print as well */
+      .doc-page.tab-hidden {
+        display: none !important;
+      }
+
+      /* Make inputs look like clean static text */
+      input.num-input, input.text-input, select.mat-select {
+        border: none !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        color: #000000 !important;
+        font-weight: 700 !important;
+        padding: 0 !important;
+        -webkit-appearance: none !important;
+        -moz-appearance: none !important;
+        appearance: none !important;
+      }
+
+      .sec-title {
+        background: #e2e8f0 !important;
+        color: #000000 !important;
+        border-left: 4px solid #000000 !important;
+        padding: 4px 8px !important;
+        font-size: 14px !important;
+      }
+
+      .step-row {
+        padding: 3px 4px !important;
+        font-size: 12px !important;
+        border: 0.5px solid #cbd5e1 !important;
+      }
+
+      .step-formula {
+        font-size: 12px !important;
+      }
+
+      .step-result {
+        font-size: 12.5px !important;
+      }
+
+      .calc-table th {
+        background: #e2e8f0 !important;
+        color: #000000 !important;
+      }
+
+      .badge-ok {
+        border: 1px solid #16a34a !important;
+        color: #16a34a !important;
+        background: #dcfce7 !important;
+      }
+
+      .badge-ng {
+        border: 1px solid #dc2626 !important;
+        color: #dc2626 !important;
+        background: #fee2e2 !important;
+      }
+
+      .diagram-img {
+        max-height: 180px;
+      }
+    }
+
+    /* Screen Tab display rule */
+    .tab-hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ============================================================
+       TOP TOOLBAR (SCREEN CONTROLS)
+       ============================================================ -->
+  <div class="toolbar no-print">
+    <div class="toolbar-left">
+      <div class="toolbar-title">
+        <span>🏗️</span>
+        <span>鋼索與吊鉤安全強度計算書</span>
+      </div>
+
+      <div class="tab-group">
+        <button class="tab-btn active" onclick="switchTab('all')">📑 全部計算書</button>
+        <button class="tab-btn" onclick="switchTab('hook')">🪝 吊鉤強度計算</button>
+        <button class="tab-btn" onclick="switchTab('wire')">🪢 鋼索安全係數</button>
+      </div>
+    </div>
+
+    <div class="toolbar-actions">
+      <label style="font-size:12px; color:#e2e8f0;">⚡ 快速範本：</label>
+      <select id="presetSelect" class="preset-select" onchange="applyPreset(this.value)">
+        <option value="preset_excel">Excel 原始範本 (4.95T / 15T 4掛)</option>
+        <option value="preset_293t" selected>3 噸以下起重機 (額定 2.93T / 2掛)</option>
+        <option value="preset_293t_4fall">3 噸以下起重機 (額定 2.93T / 4掛)</option>
+        <option value="preset_platform">搭乘設備模式 (額定 580kg / 2掛)</option>
+      </select>
+
+      <button class="btn btn-primary" onclick="window.print()">
+        <span>🖨️</span> 列印 / 匯出 PDF
+      </button>
+
+      <button class="btn btn-light" onclick="saveData()">
+        <span>💾</span> 儲存
+      </button>
+
+      <button class="btn btn-outline-white" onclick="resetForm()">
+        <span>🔄</span> 重設
+      </button>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       MAIN CONTAINER WITH THE TWO CALCULATION SHEETS
+       ============================================================ -->
+  <div class="container" id="printableContent">
+
+    <!-- ============================================================
+         PAGE 1: 吊鉤強度計算書 (HOOK STRENGTH CALCULATION)
+         ============================================================ -->
+    <div class="doc-page" id="page-hook">
+      <div class="doc-header">
+        <div class="doc-title">移動式起重機 吊鉤強度計算書</div>
+        <div class="doc-subtitle">依據《起重升降機具安全規則》及 CNS 相關標準設計檢算</div>
+      </div>
+
+      <!-- 機具基本資料 -->
+      <table class="doc-meta-table">
+        <tr>
+          <td class="lbl">申請單位：</td>
+          <td class="val"><input type="text" class="text-input" id="applicant" value="台灣起重工程行" oninput="saveData()" style="width:100%;"></td>
+          <td class="lbl">機具型式：</td>
+          <td class="val"><input type="text" class="text-input" id="craneModel" value="積載型移動式起重機" oninput="saveData()" style="width:100%;"></td>
+        </tr>
+        <tr>
+          <td class="lbl">牌照號碼：</td>
+          <td class="val"><input type="text" class="text-input" id="plateNo" value="KE-8899" oninput="saveData()" style="width:100%;"></td>
+          <td class="lbl">檢算日期：</td>
+          <td class="val"><input type="text" class="text-input" id="calcDate" value="" oninput="saveData()" style="width:100%;"></td>
+        </tr>
+      </table>
+
+      <!-- （一）吊鉤基本資料 -->
+      <div class="sec-title">
+        <span>（一）吊鉤基本資料及尺寸示意圖</span>
+        <span style="font-size:12px; font-weight:normal; color:#475569;" class="no-print">可直接於黃底框修改參數</span>
+      </div>
+
+      <div class="split-layout">
+        <!-- 左側參數輸入表格 -->
+        <div>
+          <table class="calc-table">
+            <thead>
+              <tr>
+                <th style="width:40px;">項次</th>
+                <th class="text-left">參數名稱</th>
+                <th style="width:60px;">符號</th>
+                <th style="width:110px;">設計數值</th>
+                <th style="width:65px;">單位</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>1.</td>
+                <td class="text-left">額定荷重</td>
+                <td><b>Q</b></td>
+                <td><input type="number" class="num-input" id="hook_Q" value="4950" step="any" oninput="recalcHook()"></td>
+                <td>㎏</td>
+              </tr>
+              <tr>
+                <td>2.</td>
+                <td class="text-left">吊鉤開口直徑</td>
+                <td><b>d</b></td>
+                <td><input type="number" class="num-input" id="hook_d" value="9.4" step="any" oninput="recalcHook()"></td>
+                <td>㎝</td>
+              </tr>
+              <tr style="background:#f1f5f9;">
+                <td rowspan="3">3.</td>
+                <td rowspan="3" class="text-left"><b>吊鉤第 І 剖面</b><br><small style="color:#64748b;">(主受力剖面 I-I)</small></td>
+                <td><b>B<sub>1</sub></b></td>
+                <td><input type="number" class="num-input" id="hook_B1" value="5.3" step="any" oninput="recalcHook()"></td>
+                <td>㎝</td>
+              </tr>
+              <tr style="background:#f1f5f9;">
+                <td><b>b<sub>1</sub></b></td>
+                <td><input type="number" class="num-input" id="hook_b1" value="1.6" step="any" oninput="recalcHook()"></td>
+                <td>㎝</td>
+              </tr>
+              <tr style="background:#f1f5f9;">
+                <td><b>h<sub>1</sub></b></td>
+                <td><input type="number" class="num-input" id="hook_h1" value="7.7" step="any" oninput="recalcHook()"></td>
+                <td>㎝</td>
+              </tr>
+              <tr>
+                <td rowspan="3">4.</td>
+                <td rowspan="3" class="text-left"><b>吊鉤第 П 剖面</b><br><small style="color:#64748b;">(斜向剖面 II-II)</small></td>
+                <td><b>B<sub>2</sub></b></td>
+                <td><input type="number" class="num-input" id="hook_B2" value="5.2" step="any" oninput="recalcHook()"></td>
+                <td>㎝</td>
+              </tr>
+              <tr>
+                <td><b>b<sub>2</sub></b></td>
+                <td><input type="number" class="num-input" id="hook_b2" value="1.6" step="any" oninput="recalcHook()"></td>
+                <td>㎝</td>
+              </tr>
+              <tr>
+                <td><b>h<sub>2</sub></b></td>
+                <td><input type="number" class="num-input" id="hook_h2" value="6.2" step="any" oninput="recalcHook()"></td>
+                <td>㎝</td>
+              </tr>
+              <tr>
+                <td>5.</td>
+                <td class="text-left">吊鉤使用材質</td>
+                <td>—</td>
+                <td>
+                  <select id="hook_mat" class="mat-select" onchange="onMaterialChange(this.value)">
+                    <option value="S45C:7000" selected>S45C</option>
+                    <option value="S35C:6000">S35C</option>
+                    <option value="S25C:5000">S25C</option>
+                    <option value="S20C:4500">S20C</option>
+                    <option value="SNCM439:9000">SNCM439</option>
+                    <option value="custom">自訂材質...</option>
+                  </select>
+                </td>
+                <td>—</td>
+              </tr>
+              <tr>
+                <td>6.</td>
+                <td class="text-left">吊鉤抗拉強度基準</td>
+                <td><b>σ<sub>t</sub></b></td>
+                <td><input type="number" class="num-input" id="hook_sigmat" value="7000" step="any" oninput="recalcHook()"></td>
+                <td>㎏/㎝²</td>
+              </tr>
+              <tr>
+                <td>7.</td>
+                <td class="text-left">第 П 剖面受力夾角</td>
+                <td><b>θ</b></td>
+                <td><input type="number" class="num-input" id="hook_theta" value="60" step="any" oninput="recalcHook()"></td>
+                <td>度 (°)</td>
+              </tr>
+              <tr>
+                <td>8.</td>
+                <td class="text-left">法定要求安全係數</td>
+                <td><b>S.F.<sub>req</sub></b></td>
+                <td><input type="number" class="num-input" id="hook_sf_req" value="3.0" step="any" oninput="recalcHook()"></td>
+                <td>—</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- 右側圖解 -->
+        <div class="diagram-panel">
+          <img src="img/hook_main.png" alt="吊鉤尺寸圖" class="diagram-img" style="max-height:185px;">
+          <div class="diagram-caption">圖 1：吊鉤受力與剖面 I-I、II-II 標註圖</div>
+          
+          <div class="sub-diagrams">
+            <div class="sub-diag-box">
+              <img src="img/hook_sec1.png" alt="第 I 剖面圖" class="diagram-img" style="max-height:62px;">
+              <div class="diagram-caption">圖 2：第 І 剖面</div>
+            </div>
+            <div class="sub-diag-box">
+              <img src="img/hook_sec2.png" alt="第 II 剖面圖" class="diagram-img" style="max-height:62px;">
+              <div class="diagram-caption">圖 3：第 П 剖面</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- （二）吊鉤之強度計算 -->
+      <div class="sec-title">
+        <span>（二）吊鉤強度計算推導與應力檢算</span>
+      </div>
+
+      <div class="steps-container">
+        <!-- Section I -->
+        <div style="font-weight:700; color:#1e40af; margin:4px 0 2px; font-size:13.5px;">【A】第 І 剖面（危險剖面 I-I）應力及安全係數檢算：</div>
+
+        <!-- 1. A1 -->
+        <div class="step-row">
+          <span class="step-no">1.</span>
+          <span class="step-label">吊鉤第 І 剖面面積 A<sub>1</sub>：</span>
+          <span class="step-formula">
+            A<sub>1</sub> ＝ 
+            <span class="frac"><span class="frac-top">(B<sub>1</sub>＋b<sub>1</sub>) h<sub>1</sub></span><span class="frac-bot">2</span></span>
+            ＝ 
+            <span class="frac"><span class="frac-top">(<span id="txt_B1">5.3</span>＋<span id="txt_b1">1.6</span>) × <span id="txt_h1">7.7</span></span><span class="frac-bot">2</span></span>
+            ＝
+          </span>
+          <span class="step-result" id="res_A1">26.57</span>
+          <span class="step-unit">㎝²</span>
+        </div>
+
+        <!-- 2. e1 -->
+        <div class="step-row">
+          <span class="step-no">2.</span>
+          <span class="step-label">形心至內側距離 e<sub>1</sub>：</span>
+          <span class="step-formula">
+            e<sub>1</sub> ＝ 
+            <span class="frac"><span class="frac-top">h<sub>1</sub>(B<sub>1</sub>＋2b<sub>1</sub>)</span><span class="frac-bot">3(B<sub>1</sub>＋b<sub>1</sub>)</span></span>
+            ＝ 
+            <span class="frac"><span class="frac-top"><span id="txt_h1_e1">7.7</span> × (<span id="txt_B1_e1">5.3</span>＋2×<span id="txt_b1_e1">1.6</span>)</span><span class="frac-bot">3 × (<span id="txt_B1_e1_d">5.3</span>＋<span id="txt_b1_e1_d">1.6</span>)</span></span>
+            ＝
+          </span>
+          <span class="step-result" id="res_e1">3.16</span>
+          <span class="step-unit">㎝</span>
+        </div>
+
+        <!-- 3. e2 -->
+        <div class="step-row">
+          <span class="step-no">3.</span>
+          <span class="step-label">形心至外側距離 e<sub>2</sub>：</span>
+          <span class="step-formula">
+            e<sub>2</sub> ＝ h<sub>1</sub> － e<sub>1</sub> ＝ <span id="txt_h1_e2">7.7</span> － <span id="txt_e1_sub">3.16</span> ＝
+          </span>
+          <span class="step-result" id="res_e2">4.54</span>
+          <span class="step-unit">㎝</span>
+        </div>
+
+        <!-- 4. I1 -->
+        <div class="step-row">
+          <span class="step-no">4.</span>
+          <span class="step-label">斷面慣性矩 I<sub>1</sub>：</span>
+          <span class="step-formula">
+            I<sub>1</sub> ＝ 
+            <span class="frac"><span class="frac-top">h<sub>1</sub><span class="sup">3</span> [(B<sub>1</sub>＋b<sub>1</sub>)<span class="sup">2</span> ＋ 2B<sub>1</sub>b<sub>1</sub>]</span><span class="frac-bot">36(B<sub>1</sub>＋b<sub>1</sub>)</span></span>
+            ＝ 
+            <span class="frac"><span class="frac-top"><span id="txt_h1_I1">7.7</span><span class="sup">3</span> [(<span id="txt_B1_I1">5.3</span>＋<span id="txt_b1_I1">1.6</span>)<span class="sup">2</span> ＋ 2×<span id="txt_B1_I1_2">5.3</span>×<span id="txt_b1_I1_2">1.6</span>]</span><span class="frac-bot">36 × (<span id="txt_B1_I1_d">5.3</span>＋<span id="txt_b1_I1_d">1.6</span>)</span></span>
+            ＝
+          </span>
+          <span class="step-result" id="res_I1">118.7</span>
+          <span class="step-unit">㎝⁴</span>
+        </div>
+
+        <!-- 5. Z1 -->
+        <div class="step-row">
+          <span class="step-no">5.</span>
+          <span class="step-label">內側斷面係數 Z<sub>1</sub>：</span>
+          <span class="step-formula">
+            Z<sub>1</sub> ＝ 
+            <span class="frac"><span class="frac-top">I<sub>1</sub></span><span class="frac-bot">e<sub>1</sub></span></span>
+            ＝ 
+            <span class="frac"><span class="frac-top" id="txt_I1_Z1">118.7</span><span class="frac-bot" id="txt_e1_Z1">3.16</span></span>
+            ＝
+          </span>
+          <span class="step-result" id="res_Z1">37.5</span>
+          <span class="step-unit">㎝³</span>
+        </div>
+
+        <!-- 6. Z2 -->
+        <div class="step-row">
+          <span class="step-no">6.</span>
+          <span class="step-label">外側斷面係數 Z<sub>2</sub>：</span>
+          <span class="step-formula">
+            Z<sub>2</sub> ＝ 
+            <span class="frac"><span class="frac-top">I<sub>1</sub></span><span class="frac-bot">e<sub>2</sub></span></span>
+            ＝ 
+            <span class="frac"><span class="frac-top" id="txt_I1_Z2">118.7</span><span class="frac-bot" id="txt_e2_Z2">4.54</span></span>
+            ＝
+          </span>
+          <span class="step-result" id="res_Z2">26.1</span>
+          <span class="step-unit">㎝³</span>
+        </div>
+
+        <!-- 7. M1 -->
+        <div class="step-row">
+          <span class="step-no">7.</span>
+          <span class="step-label">彎曲力矩 M<sub>1</sub>：</span>
+          <span class="step-formula">
+            M<sub>1</sub> ＝ Q × ( <span class="frac"><span class="frac-top">d</span><span class="frac-bot">2</span></span> ＋ e<sub>1</sub> ) 
+            ＝ <span id="txt_Q_M1">4950</span> × ( <span class="frac"><span class="frac-top" id="txt_d_M1">9.4</span><span class="frac-bot">2</span></span> ＋ <span id="txt_e1_M1">3.16</span> ) ＝
+          </span>
+          <span class="step-result" id="res_M1">38916.1</span>
+          <span class="step-unit">㎏-㎝</span>
+        </div>
+
+        <!-- 8. sig_bt1 -->
+        <div class="step-row">
+          <span class="step-no">8.</span>
+          <span class="step-label">內緣複合拉應力 σ<sub>bt1</sub>：</span>
+          <span class="step-formula">
+            σ<sub>bt1</sub> ＝ 
+            <span class="frac"><span class="frac-top">M<sub>1</sub></span><span class="frac-bot">Z<sub>1</sub></span></span> ＋ 
+            <span class="frac"><span class="frac-top">Q</span><span class="frac-bot">A<sub>1</sub></span></span>
+            ＝ 
+            <span class="frac"><span class="frac-top" id="txt_M1_bt1">38916.1</span><span class="frac-bot" id="txt_Z1_bt1">37.5</span></span> ＋ 
+            <span class="frac"><span class="frac-top" id="txt_Q_bt1">4950</span><span class="frac-bot" id="txt_A1_bt1">26.57</span></span> ＝
+          </span>
+          <span class="step-result" id="res_sig_bt1">1223.2</span>
+          <span class="step-unit">㎏/㎝²</span>
+        </div>
+
+        <!-- 9. sig_bc1 -->
+        <div class="step-row">
+          <span class="step-no">9.</span>
+          <span class="step-label">外緣複合壓應力 σ<sub>bc1</sub>：</span>
+          <span class="step-formula">
+            σ<sub>bc1</sub> ＝ －
+            <span class="frac"><span class="frac-top">M<sub>1</sub></span><span class="frac-bot">Z<sub>2</sub></span></span> ＋ 
+            <span class="frac"><span class="frac-top">Q</span><span class="frac-bot">A<sub>1</sub></span></span>
+            ＝ －
+            <span class="frac"><span class="frac-top" id="txt_M1_bc1">38916.1</span><span class="frac-bot" id="txt_Z2_bc1">26.1</span></span> ＋ 
+            <span class="frac"><span class="frac-top" id="txt_Q_bc1">4950</span><span class="frac-bot" id="txt_A1_bc1">26.57</span></span> ＝
+          </span>
+          <span class="step-result" id="res_sig_bc1">-1301.9</span>
+          <span class="step-unit">㎏/㎝²</span>
+        </div>
+
+        <!-- 10. S.F. 1 -->
+        <div class="step-row highlight">
+          <span class="step-no">10.</span>
+          <span class="step-label">第 І 剖面安全係數 S.F.<sub>1</sub>：</span>
+          <span class="step-formula">
+            S.F.<sub>1</sub> ＝ 
+            <span class="frac"><span class="frac-top">σ<sub>t</sub></span><span class="frac-bot">max( |σ<sub>bt1</sub>|, |σ<sub>bc1</sub>| )</span></span>
+            ＝ 
+            <span class="frac"><span class="frac-top" id="txt_sigmat_sf1">7000</span><span class="frac-bot" id="txt_max_sig1">1301.9</span></span> ＝
+          </span>
+          <span class="step-result" id="res_sf1" style="font-size:15px;">5.4</span>
+          <span class="step-unit" style="min-width:140px;" id="badge_sf1">
+            <span class="badge badge-ok">＞ 3.0 →【合格 OK】</span>
+          </span>
+        </div>
+
+        <!-- Section II -->
+        <div style="font-weight:700; color:#1e40af; margin:10px 0 2px; font-size:13.5px;">【B】第 П 剖面（斜向剖面 II-II，夾角 θ＝<span id="txt_theta_label">60</span>°）應力及安全係數檢算：</div>
+
+        <!-- 11. A2 -->
+        <div class="step-row">
+          <span class="step-no">11.</span>
+          <span class="step-label">吊鉤第 П 剖面面積 A<sub>2</sub>：</span>
+          <span class="step-formula">
+            A<sub>2</sub> ＝ 
+            <span class="frac"><span class="frac-top">(B<sub>2</sub>＋b<sub>2</sub>) h<sub>2</sub></span><span class="frac-bot">2</span></span>
+            ＝ 
+            <span class="frac"><span class="frac-top">(<span id="txt_B2">5.2</span>＋<span id="txt_b2">1.6</span>) × <span id="txt_h2">6.2</span></span><span class="frac-bot">2</span></span>
+            ＝
+          </span>
+          <span class="step-result" id="res_A2">21.08</span>
+          <span class="step-unit">㎝²</span>
+        </div>
+
+        <!-- 12. e3 -->
+        <div class="step-row">
+          <span class="step-no">12.</span>
+          <span class="step-label">形心至內側距離 e<sub>3</sub>：</span>
+          <span class="step-formula">
+            e<sub>3</sub> ＝ 
+            <span class="frac"><span class="frac-top">h<sub>2</sub>(B<sub>2</sub>＋2b<sub>2</sub>)</span><span class="frac-bot">3(B<sub>2</sub>＋b<sub>2</sub>)</span></span>
+            ＝ 
+            <span class="frac"><span class="frac-top"><span id="txt_h2_e3">6.2</span> × (<span id="txt_B2_e3">5.2</span>＋2×<span id="txt_b2_e3">1.6</span>)</span><span class="frac-bot">3 × (<span id="txt_B2_e3_d">5.2</span>＋<span id="txt_b2_e3_d">1.6</span>)</span></span>
+            ＝
+          </span>
+          <span class="step-result" id="res_e3">2.55</span>
+          <span class="step-unit">㎝</span>
+        </div>
+
+        <!-- 13. e4 -->
+        <div class="step-row">
+          <span class="step-no">13.</span>
+          <span class="step-label">形心至外側距離 e<sub>4</sub>：</span>
+          <span class="step-formula">
+            e<sub>4</sub> ＝ h<sub>2</sub> － e<sub>3</sub> ＝ <span id="txt_h2_e4">6.2</span> － <span id="txt_e3_sub">2.55</span> ＝
+          </span>
+          <span class="step-result" id="res_e4">3.65</span>
+          <span class="step-unit">㎝</span>
+        </div>
+
+        <!-- 14. I2 -->
+        <div class="step-row">
+          <span class="step-no">14.</span>
+          <span class="step-label">斷面慣性矩 I<sub>2</sub>：</span>
+          <span class="step-formula">
+            I<sub>2</sub> ＝ 
+            <span class="frac"><span class="frac-top">h<sub>2</sub><span class="sup">3</span> [(B<sub>2</sub>＋b<sub>2</sub>)<span class="sup">2</span> ＋ 2B<sub>2</sub>b<sub>2</sub>]</span><span class="frac-bot">36(B<sub>2</sub>＋b<sub>2</sub>)</span></span>
+            ＝ 
+            <span class="frac"><span class="frac-top"><span id="txt_h2_I2">6.2</span><span class="sup">3</span> [(<span id="txt_B2_I2">5.2</span>＋<span id="txt_b2_I2">1.6</span>)<span class="sup">2</span> ＋ 2×<span id="txt_B2_I2_2">5.2</span>×<span id="txt_b2_I2_2">1.6</span>]</span><span class="frac-bot">36 × (<span id="txt_B2_I2_d">5.2</span>＋<span id="txt_b2_I2_d">1.6</span>)</span></span>
+            ＝
+          </span>
+          <span class="step-result" id="res_I2">61.2</span>
+          <span class="step-unit">㎝⁴</span>
+        </div>
+
+        <!-- 15. Z3 -->
+        <div class="step-row">
+          <span class="step-no">15.</span>
+          <span class="step-label">內側斷面係數 Z<sub>3</sub>：</span>
+          <span class="step-formula">
+            Z<sub>3</sub> ＝ 
+            <span class="frac"><span class="frac-top">I<sub>2</sub></span><span class="frac-bot">e<sub>3</sub></span></span>
+            ＝ 
+            <span class="frac"><span class="frac-top" id="txt_I2_Z3">61.2</span><span class="frac-bot" id="txt_e3_Z3">2.55</span></span>
+            ＝
+          </span>
+          <span class="step-result" id="res_Z3">24.0</span>
+          <span class="step-unit">㎝³</span>
+        </div>
+
+        <!-- 16. Z4 -->
+        <div class="step-row">
+          <span class="step-no">16.</span>
+          <span class="step-label">外側斷面係數 Z<sub>4</sub>：</span>
+          <span class="step-formula">
+            Z<sub>4</sub> ＝ 
+            <span class="frac"><span class="frac-top">I<sub>2</sub></span><span class="frac-bot">e<sub>4</sub></span></span>
+            ＝ 
+            <span class="frac"><span class="frac-top" id="txt_I2_Z4">61.2</span><span class="frac-bot" id="txt_e4_Z4">3.65</span></span>
+            ＝
+          </span>
+          <span class="step-result" id="res_Z4">16.8</span>
+          <span class="step-unit">㎝³</span>
+        </div>
+
+        <!-- 17. M2 -->
+        <div class="step-row">
+          <span class="step-no">17.</span>
+          <span class="step-label">彎曲力矩 M<sub>2</sub>：</span>
+          <span class="step-formula">
+            M<sub>2</sub> ＝ <span class="frac"><span class="frac-top">Q</span><span class="frac-bot">2</span></span> tanθ ( <span class="frac"><span class="frac-top">d</span><span class="frac-bot">2</span></span> ＋ e<sub>3</sub> )
+            ＝ <span class="frac"><span class="frac-top" id="txt_Q_M2">4950</span><span class="frac-bot">2</span></span> × tan<span id="txt_theta_M2">60</span>° × ( <span class="frac"><span class="frac-top" id="txt_d_M2">9.4</span><span class="frac-bot">2</span></span> ＋ <span id="txt_e3_M2">2.55</span> ) ＝
+          </span>
+          <span class="step-result" id="res_M2">31092.1</span>
+          <span class="step-unit">㎏-㎝</span>
+        </div>
+
+        <!-- 18. sig_bt2 -->
+        <div class="step-row">
+          <span class="step-no">18.</span>
+          <span class="step-label">內緣複合拉應力 σ<sub>bt2</sub>：</span>
+          <span class="step-formula">
+            σ<sub>bt2</sub> ＝ 
+            <span class="frac"><span class="frac-top">M<sub>2</sub></span><span class="frac-bot">Z<sub>3</sub></span></span> ＋ 
+            <span class="frac"><span class="frac-top">Q · tanθ</span><span class="frac-bot">2 A<sub>2</sub></span></span>
+            ＝ 
+            <span class="frac"><span class="frac-top" id="txt_M2_bt2">31092.1</span><span class="frac-bot" id="txt_Z3_bt2">24.0</span></span> ＋ 
+            <span class="frac"><span class="frac-top" id="txt_Q_bt2">4950</span> × tan<span id="txt_theta_bt2">60</span>°</span><span class="frac-bot">2 × <span id="txt_A2_bt2">21.08</span></span></span> ＝
+          </span>
+          <span class="step-result" id="res_sig_bt2">1500.0</span>
+          <span class="step-unit">㎏/㎝²</span>
+        </div>
+
+        <!-- 19. sig_bc2 -->
+        <div class="step-row">
+          <span class="step-no">19.</span>
+          <span class="step-label">外緣複合壓應力 σ<sub>bc2</sub>：</span>
+          <span class="step-formula">
+            σ<sub>bc2</sub> ＝ －
+            <span class="frac"><span class="frac-top">M<sub>2</sub></span><span class="frac-bot">Z<sub>4</sub></span></span> ＋ 
+            <span class="frac"><span class="frac-top">Q · tanθ</span><span class="frac-bot">2 A<sub>2</sub></span></span>
+            ＝ －
+            <span class="frac"><span class="frac-top" id="txt_M2_bc2">31092.1</span><span class="frac-bot" id="txt_Z4_bc2">16.8</span></span> ＋ 
+            <span class="frac"><span class="frac-top" id="txt_Q_bc2">4950</span> × tan<span id="txt_theta_bc2">60</span>°</span><span class="frac-bot">2 × <span id="txt_A2_bc2">21.08</span></span></span> ＝
+          </span>
+          <span class="step-result" id="res_sig_bc2">-1649.0</span>
+          <span class="step-unit">㎏/㎝²</span>
+        </div>
+
+        <!-- 20. S.F. 2 -->
+        <div class="step-row highlight">
+          <span class="step-no">20.</span>
+          <span class="step-label">第 П 剖面安全係數 S.F.<sub>2</sub>：</span>
+          <span class="step-formula">
+            S.F.<sub>2</sub> ＝ 
+            <span class="frac"><span class="frac-top">σ<sub>t</sub></span><span class="frac-bot">max( |σ<sub>bt2</sub>|, |σ<sub>bc2</sub>| )</span></span>
+            ＝ 
+            <span class="frac"><span class="frac-top" id="txt_sigmat_sf2">7000</span><span class="frac-bot" id="txt_max_sig2">1649.0</span></span> ＝
+          </span>
+          <span class="step-result" id="res_sf2" style="font-size:15px;">4.2</span>
+          <span class="step-unit" style="min-width:140px;" id="badge_sf2">
+            <span class="badge badge-ok">＞ 3.0 →【合格 OK】</span>
+          </span>
+        </div>
+      </div>
+
+      <!-- 總結與判定 -->
+      <div class="summary-card">
+        <div class="summary-title">
+          <span>📋</span>
+          <span>吊鉤強度綜合檢算判定結果：</span>
+        </div>
+        <div class="summary-grid">
+          <div class="summary-item">
+            <span class="item-title">第 І 剖面安全係數 S.F.<sub>1</sub></span>
+            <span class="item-val" id="sum_sf1">5.4 (合格)</span>
+          </div>
+          <div class="summary-item">
+            <span class="item-title">第 П 剖面安全係數 S.F.<sub>2</sub></span>
+            <span class="item-val" id="sum_sf2">4.2 (合格)</span>
+          </div>
+          <div class="summary-item">
+            <span class="item-title">最終強度審查結論</span>
+            <span class="item-val" id="sum_final_hook" style="color:var(--ok-color);">符合安全標準（合格）</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="note-box">
+        備註：1. 吊鉤抗拉強度係依材質規範（如 S45C 抗拉強度 σt ≥ 7,000 kg/cm²）。<br>
+        2. 依規定移動式起重機吊鉤於額定荷重作用下，各危險斷面之合成應力所計算之安全係數均應大於 3.0。
+      </div>
+    </div>
+
+
+    <!-- ============================================================
+         PAGE 2: 鋼索之安全係數計算書 (WIRE ROPE SAFETY FACTOR)
+         ============================================================ -->
+    <div class="doc-page" id="page-wire">
+      <div class="doc-header">
+        <div class="doc-title">移動式起重機 鋼索之安全係數計算書</div>
+        <div class="doc-subtitle">依據《起重升降機具安全規則》第 55、56 條及 CNS 相關法規規定檢算</div>
+      </div>
+
+      <!-- 機具基本資料 -->
+      <table class="doc-meta-table">
+        <tr>
+          <td class="lbl">申請單位：</td>
+          <td class="val"><input type="text" class="text-input" id="wire_applicant" value="台灣起重工程行" oninput="syncFields('applicant', this.value)" style="width:100%;"></td>
+          <td class="lbl">機具型式：</td>
+          <td class="val"><input type="text" class="text-input" id="wire_craneModel" value="積載型移動式起重機" oninput="syncFields('craneModel', this.value)" style="width:100%;"></td>
+        </tr>
+        <tr>
+          <td class="lbl">牌照號碼：</td>
+          <td class="val"><input type="text" class="text-input" id="wire_plateNo" value="KE-8899" oninput="syncFields('plateNo', this.value)" style="width:100%;"></td>
+          <td class="lbl">檢算日期：</td>
+          <td class="val"><input type="text" class="text-input" id="wire_calcDate" value="" oninput="syncFields('calcDate', this.value)" style="width:100%;"></td>
+        </tr>
+      </table>
+
+      <!-- （一）鋼索及捲揚機構基本資料 -->
+      <div class="sec-title">
+        <span>（一）鋼索規格與捲揚設計條件</span>
+        <span style="font-size:12px; font-weight:normal; color:#475569;" class="no-print">可直接於黃底框修改參數</span>
+      </div>
+
+      <table class="calc-table">
+        <thead>
+          <tr>
+            <th style="width:40px;">項次</th>
+            <th class="text-left">參數與設計項目</th>
+            <th style="width:70px;">符號</th>
+            <th style="width:130px;">數值</th>
+            <th style="width:75px;">單位</th>
+            <th class="text-left" style="width:240px;">法規依據 / 備註說明</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>1-</td>
+            <td class="text-left">鋼索直徑</td>
+            <td><b>d<sub>w</sub></b></td>
+            <td><input type="number" class="num-input" id="wire_d" value="20" step="any" oninput="recalcWire()"></td>
+            <td>㎜</td>
+            <td class="text-left">捲揚主鋼索直徑標稱值</td>
+          </tr>
+          <tr>
+            <td>2-</td>
+            <td class="text-left">額定荷重</td>
+            <td><b>W<sub>rated</sub></b></td>
+            <td><input type="number" class="num-input" id="wire_Wrated" value="15000" step="any" oninput="recalcWire()"></td>
+            <td>㎏</td>
+            <td class="text-left">起重機最大額定起重量</td>
+          </tr>
+          <tr>
+            <td>3-</td>
+            <td class="text-left">吊鉤重量</td>
+            <td><b>W<sub>hook</sub></b></td>
+            <td><input type="number" class="num-input" id="wire_Whook" value="150" step="any" oninput="recalcWire()"></td>
+            <td>㎏</td>
+            <td class="text-left">吊鉤總成及滑車附屬夾具重</td>
+          </tr>
+          <tr>
+            <td>4-</td>
+            <td class="text-left">鋼索斷裂負荷（破斷力）</td>
+            <td><b>P<sub>break</sub></b></td>
+            <td><input type="number" class="num-input" id="wire_Pbreak" value="21700" step="any" oninput="recalcWire()"></td>
+            <td>㎏</td>
+            <td class="text-left">檢附製造商出廠試驗破斷荷重證明</td>
+          </tr>
+          <tr>
+            <td>5-</td>
+            <td class="text-left">鋼索掛數（掛線本數）</td>
+            <td><b>n</b></td>
+            <td><input type="number" class="num-input" id="wire_n" value="4" step="1" min="1" oninput="recalcWire()"></td>
+            <td>掛 (本)</td>
+            <td class="text-left">捲揚吊鉤滑輪組掛數</td>
+          </tr>
+          <tr>
+            <td>6-</td>
+            <td class="text-left">法定安全係數基準</td>
+            <td><b>S<sub>req</sub></b></td>
+            <td><input type="number" class="num-input" id="wire_Sreq" value="5.0" step="any" oninput="recalcWire()"></td>
+            <td>—</td>
+            <td class="text-left">起重升降機具安全規則規定：≥ 5.0</td>
+          </tr>
+          <tr>
+            <td>7-</td>
+            <td class="text-left">鋼索槽輪綜合效率</td>
+            <td><b>η</b></td>
+            <td><input type="number" class="num-input" id="wire_eta" value="0.951" step="any" oninput="recalcWire()"></td>
+            <td>—</td>
+            <td class="text-left">考量滑輪軸承摩擦損失之傳動效率</td>
+          </tr>
+          <tr>
+            <td>—</td>
+            <td class="text-left">鋼索構造規格（參考）</td>
+            <td>—</td>
+            <td colspan="3" class="text-left" style="background:#fff;">
+              <input type="text" class="text-input" id="wire_type" value="6×Fi(29)＋IWRC 鍍鋅鋼索 1770 N/mm²" oninput="saveData()" style="width:96%;">
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- （二）計算過程及公式 -->
+      <div class="sec-title">
+        <span>（二）計算過程與法規符合性判定</span>
+      </div>
+
+      <div class="steps-container">
+        <!-- 8. 每條鋼索負荷 -->
+        <div class="step-row" style="padding: 10px 8px;">
+          <span class="step-no" style="font-size:15px;">8-</span>
+          <span class="step-label" style="min-width:180px; font-size:14px;">每條鋼索負荷 P<sub>single</sub>：</span>
+          <span class="step-formula" style="font-size:15px;">
+            P<sub>single</sub> ＝ 
+            <span class="frac">
+              <span class="frac-top">額定荷重 (W<sub>rated</sub>) ＋ 吊鉤重量 (W<sub>hook</sub>)</span>
+              <span class="frac-bot">鋼索掛數 (n)</span>
+            </span>
+            ＝ 
+            <span class="frac">
+              <span class="frac-top"><span id="txt_wire_Wrated">15000</span> ＋ <span id="txt_wire_Whook">150</span></span>
+              <span class="frac-bot" id="txt_wire_n">4</span>
+            </span>
+            ＝
+          </span>
+          <span class="step-result" id="res_wire_Psingle" style="font-size:16px;">3788</span>
+          <span class="step-unit" style="font-size:14px;">㎏</span>
+        </div>
+
+        <div style="font-size:12.5px; color:#64748b; margin:-2px 0 6px 36px;">
+          【公式說明：每條鋼索所承受之最大靜負荷 ＝（額定荷重 ＋ 吊鉤總重量）／ 鋼索掛數】
+        </div>
+
+        <!-- 9. 實際安全係數 S -->
+        <div class="step-row highlight" style="padding: 12px 8px;">
+          <span class="step-no" style="font-size:15px;">9-</span>
+          <span class="step-label" style="min-width:180px; font-size:14px;">實際安全係數 S：</span>
+          <span class="step-formula" style="font-size:15px;">
+            S ＝ 
+            <span class="frac">
+              <span class="frac-top">鋼索斷裂負荷 (P<sub>break</sub>) × 鋼索槽輪效率 (η)</span>
+              <span class="frac-bot">每條鋼索負荷 (P<sub>single</sub>)</span>
+            </span>
+            ＝ 
+            <span class="frac">
+              <span class="frac-top"><span id="txt_wire_Pbreak">21700</span> × <span id="txt_wire_eta">0.951</span></span>
+              <span class="frac-bot" id="txt_wire_Psingle">3788</span>
+            </span>
+            ＝
+          </span>
+          <span class="step-result" id="res_wire_S" style="font-size:18px; color:#1e40af;">5.449</span>
+          <span class="step-unit" style="min-width:160px;" id="badge_wire_S">
+            <span class="badge badge-ok" style="font-size:14px;">＞ 5.0 →【合格 OK!】</span>
+          </span>
+        </div>
+
+        <div style="font-size:12.5px; color:#64748b; margin:-2px 0 6px 36px;">
+          【公式說明：實際安全係數 S ＝（鋼索破斷負荷 × 槽輪綜合效率）／ 每條鋼索負荷】
+        </div>
+      </div>
+
+      <!-- 總結與判定 -->
+      <div class="summary-card">
+        <div class="summary-title">
+          <span>📋</span>
+          <span>鋼索安全係數檢算結論：</span>
+        </div>
+        <div class="summary-grid">
+          <div class="summary-item">
+            <span class="item-title">鋼索直徑 / 掛數</span>
+            <span class="item-val" id="sum_wire_spec">Φ20 ㎜ × 4 掛</span>
+          </div>
+          <div class="summary-item">
+            <span class="item-title">每條鋼索最大負荷</span>
+            <span class="item-val" id="sum_wire_load">3,788 ㎏</span>
+          </div>
+          <div class="summary-item">
+            <span class="item-title">計算實際安全係數</span>
+            <span class="item-val" id="sum_wire_sf" style="color:var(--primary);">S ＝ 5.449</span>
+          </div>
+          <div class="summary-item">
+            <span class="item-title">法規判定 (基準 ≥ <span id="sum_wire_req">5.0</span>)</span>
+            <span class="item-val" id="sum_wire_judge" style="color:var(--ok-color);">合格 (OK!)</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="note-box">
+        法規說明：依據《起重升降機具安全規則》第 55 條規定，起重機之捲揚鋼索安全係數不得小於 5.0。本檢算結果實際安全係數大於法定基準，符合安全標準。
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ============================================================
+       INTERACTIVE SCRIPT & REAL-TIME RECALCULATION ENGINE
+       ============================================================ -->
+  <script>
+    // Constants & Formats
+    const N = (id) => parseFloat(document.getElementById(id).value) || 0;
+    const V = (id) => document.getElementById(id).value;
+    const setT = (id, text) => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = text;
+    };
+    const setH = (id, html) => {
+      const el = document.getElementById(id);
+      if (el) el.innerHTML = html;
+    };
+
+    // Format number to fixed decimal or clean string
+    function fmt(num, digits = 2) {
+      if (isNaN(num) || !isFinite(num)) return "—";
+      return Number(num.toFixed(digits)).toString();
+    }
+
+    function fmtComma(num, digits = 0) {
+      if (isNaN(num) || !isFinite(num)) return "—";
+      return num.toLocaleString('zh-TW', { minimumFractionDigits: digits, maximumFractionDigits: digits });
+    }
+
+    // Set default date to today
+    function initDate() {
+      const d = new Date();
+      const rocYear = d.getFullYear() - 1911;
+      const dateStr = `民國 ${rocYear} 年 ${d.getMonth()+1} 月 ${d.getDate()} 日`;
+      if (!document.getElementById('calcDate').value) {
+        document.getElementById('calcDate').value = dateStr;
+        document.getElementById('wire_calcDate').value = dateStr;
+      }
+    }
+
+    // Sync input fields between Hook & Wire calculation sheets
+    function syncFields(field, val) {
+      if (field === 'applicant') {
+        document.getElementById('applicant').value = val;
+        document.getElementById('wire_applicant').value = val;
+      } else if (field === 'craneModel') {
+        document.getElementById('craneModel').value = val;
+        document.getElementById('wire_craneModel').value = val;
+      } else if (field === 'plateNo') {
+        document.getElementById('plateNo').value = val;
+        document.getElementById('wire_plateNo').value = val;
+      } else if (field === 'calcDate') {
+        document.getElementById('calcDate').value = val;
+        document.getElementById('wire_calcDate').value = val;
+      }
+      saveData();
+    }
+
+    // Tab switching
+    function switchTab(tab) {
+      const btnAll = document.querySelectorAll('.tab-btn');
+      btnAll.forEach(b => b.classList.remove('active'));
+
+      const pageHook = document.getElementById('page-hook');
+      const pageWire = document.getElementById('page-wire');
+
+      if (tab === 'all') {
+        btnAll[0].classList.add('active');
+        pageHook.classList.remove('tab-hidden');
+        pageWire.classList.remove('tab-hidden');
+      } else if (tab === 'hook') {
+        btnAll[1].classList.add('active');
+        pageHook.classList.remove('tab-hidden');
+        pageWire.classList.add('tab-hidden');
+      } else if (tab === 'wire') {
+        btnAll[2].classList.add('active');
+        pageHook.classList.add('tab-hidden');
+        pageWire.classList.remove('tab-hidden');
+      }
+    }
+
+    // Material Dropdown Change
+    function onMaterialChange(val) {
+      if (val === 'custom') {
+        const customSig = prompt("請輸入自訂材質抗拉強度 σt (kg/cm²):", "7000");
+        if (customSig && !isNaN(parseFloat(customSig))) {
+          document.getElementById('hook_sigmat').value = parseFloat(customSig);
+        }
+      } else {
+        const parts = val.split(':');
+        document.getElementById('hook_sigmat').value = parseFloat(parts[1]);
+      }
+      recalcHook();
+    }
+
+    // -------------------------------------------------------------
+    // HOOK RECALCULATION ENGINE (Exact Excel formulas)
+    // -------------------------------------------------------------
+    function recalcHook() {
+      const Q = N('hook_Q');
+      const d = N('hook_d');
+      const B1 = N('hook_B1');
+      const b1 = N('hook_b1');
+      const h1 = N('hook_h1');
+      const B2 = N('hook_B2');
+      const b2 = N('hook_b2');
+      const h2 = N('hook_h2');
+      const sigmat = N('hook_sigmat');
+      const thetaDeg = N('hook_theta');
+      const sfReq = N('hook_sf_req');
+      const thetaRad = thetaDeg * Math.PI / 180;
+      const tanTheta = Math.tan(thetaRad);
+
+      // Section I Calculations
+      // 1. A1 = (B1 + b1) * h1 / 2
+      const A1 = (B1 + b1) * h1 / 2;
+      // 2. e1 = h1 * (B1 + 2 * b1) / (3 * (B1 + b1))
+      const e1 = (B1 + b1 === 0) ? 0 : (h1 * (B1 + 2 * b1)) / (3 * (B1 + b1));
+      // 3. e2 = h1 - e1
+      const e2 = h1 - e1;
+      // 4. I1 = h1^3 * ((B1+b1)^2 + 2*B1*b1) / (36 * (B1+b1))
+      const I1 = (B1 + b1 === 0) ? 0 : (Math.pow(h1, 3) * (Math.pow(B1 + b1, 2) + 2 * B1 * b1)) / (36 * (B1 + b1));
+      // 5. Z1 = I1 / e1
+      const Z1 = (e1 === 0) ? 0 : I1 / e1;
+      // 6. Z2 = I1 / e2
+      const Z2 = (e2 === 0) ? 0 : I1 / e2;
+      // 7. M1 = Q * (d/2 + e1)
+      const M1 = Q * (d / 2 + e1);
+      // 8. sig_bt1 = M1/Z1 + Q/A1
+      const sig_bt1 = (Z1 === 0 || A1 === 0) ? 0 : (M1 / Z1) + (Q / A1);
+      // 9. sig_bc1 = -M1/Z2 + Q/A1
+      const sig_bc1 = (Z2 === 0 || A1 === 0) ? 0 : (-M1 / Z2) + (Q / A1);
+      // 10. Max stress & SF1
+      const max_sig1 = Math.max(Math.abs(sig_bt1), Math.abs(sig_bc1));
+      const sf1 = (max_sig1 === 0) ? 0 : sigmat / max_sig1;
+
+      // Section II Calculations
+      // 11. A2 = (B2 + b2) * h2 / 2
+      const A2 = (B2 + b2) * h2 / 2;
+      // 12. e3 = h2 * (B2 + 2 * b2) / (3 * (B2 + b2))
+      const e3 = (B2 + b2 === 0) ? 0 : (h2 * (B2 + 2 * b2)) / (3 * (B2 + b2));
+      // 13. e4 = h2 - e3
+      const e4 = h2 - e3;
+      // 14. I2 = h2^3 * ((B2+b2)^2 + 2*B2*b2) / (36 * (B2+b2))
+      const I2 = (B2 + b2 === 0) ? 0 : (Math.pow(h2, 3) * (Math.pow(B2 + b2, 2) + 2 * B2 * b2)) / (36 * (B2 + b2));
+      // 15. Z3 = I2 / e3
+      const Z3 = (e3 === 0) ? 0 : I2 / e3;
+      // 16. Z4 = I2 / e4
+      const Z4 = (e4 === 0) ? 0 : I2 / e4;
+      // 17. M2 = (Q/2) * tan(theta) * (d/2 + e3)
+      const M2 = (Q / 2) * tanTheta * (d / 2 + e3);
+      // 18. sig_bt2 = M2/Z3 + (Q * tanTheta) / (2 * A2)
+      const sig_bt2 = (Z3 === 0 || A2 === 0) ? 0 : (M2 / Z3) + (Q * tanTheta) / (2 * A2);
+      // 19. sig_bc2 = -M2/Z4 + (Q * tanTheta) / (2 * A2)
+      const sig_bc2 = (Z4 === 0 || A2 === 0) ? 0 : (-M2 / Z4) + (Q * tanTheta) / (2 * A2);
+      // 20. Max stress & SF2
+      const max_sig2 = Math.max(Math.abs(sig_bt2), Math.abs(sig_bc2));
+      const sf2 = (max_sig2 === 0) ? 0 : sigmat / max_sig2;
+
+      // Update Section I text and formulas
+      setT('txt_B1', fmt(B1, 1));
+      setT('txt_b1', fmt(b1, 1));
+      setT('txt_h1', fmt(h1, 1));
+      setT('res_A1', fmt(A1, 2));
+
+      setT('txt_h1_e1', fmt(h1, 1));
+      setT('txt_B1_e1', fmt(B1, 1));
+      setT('txt_b1_e1', fmt(b1, 1));
+      setT('txt_B1_e1_d', fmt(B1, 1));
+      setT('txt_b1_e1_d', fmt(b1, 1));
+      setT('res_e1', fmt(e1, 2));
+
+      setT('txt_h1_e2', fmt(h1, 1));
+      setT('txt_e1_sub', fmt(e1, 2));
+      setT('res_e2', fmt(e2, 2));
+
+      setT('txt_h1_I1', fmt(h1, 1));
+      setT('txt_B1_I1', fmt(B1, 1));
+      setT('txt_b1_I1', fmt(b1, 1));
+      setT('txt_B1_I1_2', fmt(B1, 1));
+      setT('txt_b1_I1_2', fmt(b1, 1));
+      setT('txt_B1_I1_d', fmt(B1, 1));
+      setT('txt_b1_I1_d', fmt(b1, 1));
+      setT('res_I1', fmt(I1, 1));
+
+      setT('txt_I1_Z1', fmt(I1, 1));
+      setT('txt_e1_Z1', fmt(e1, 2));
+      setT('res_Z1', fmt(Z1, 1));
+
+      setT('txt_I1_Z2', fmt(I1, 1));
+      setT('txt_e2_Z2', fmt(e2, 2));
+      setT('res_Z2', fmt(Z2, 1));
+
+      setT('txt_Q_M1', fmt(Q, 0));
+      setT('txt_d_M1', fmt(d, 1));
+      setT('txt_e1_M1', fmt(e1, 2));
+      setT('res_M1', fmt(M1, 1));
+
+      setT('txt_M1_bt1', fmt(M1, 1));
+      setT('txt_Z1_bt1', fmt(Z1, 1));
+      setT('txt_Q_bt1', fmt(Q, 0));
+      setT('txt_A1_bt1', fmt(A1, 2));
+      setT('res_sig_bt1', fmt(sig_bt1, 1));
+
+      setT('txt_M1_bc1', fmt(M1, 1));
+      setT('txt_Z2_bc1', fmt(Z2, 1));
+      setT('txt_Q_bc1', fmt(Q, 0));
+      setT('txt_A1_bc1', fmt(A1, 2));
+      setT('res_sig_bc1', fmt(sig_bc1, 1));
+
+      setT('txt_sigmat_sf1', fmt(sigmat, 0));
+      setT('txt_max_sig1', fmt(max_sig1, 1));
+      setT('res_sf1', fmt(sf1, 1));
+
+      // Section I badge
+      const isSf1Ok = sf1 >= sfReq;
+      setH('badge_sf1', isSf1Ok 
+        ? `<span class="badge badge-ok">＞ ${sfReq} →【合格 OK】</span>` 
+        : `<span class="badge badge-ng">＜ ${sfReq} →【不合格 NG】</span>`);
+
+      // Update Section II text and formulas
+      setT('txt_theta_label', fmt(thetaDeg, 0));
+      setT('txt_B2', fmt(B2, 1));
+      setT('txt_b2', fmt(b2, 1));
+      setT('txt_h2', fmt(h2, 1));
+      setT('res_A2', fmt(A2, 2));
+
+      setT('txt_h2_e3', fmt(h2, 1));
+      setT('txt_B2_e3', fmt(B2, 1));
+      setT('txt_b2_e3', fmt(b2, 1));
+      setT('txt_B2_e3_d', fmt(B2, 1));
+      setT('txt_b2_e3_d', fmt(b2, 1));
+      setT('res_e3', fmt(e3, 2));
+
+      setT('txt_h2_e4', fmt(h2, 1));
+      setT('txt_e3_sub', fmt(e3, 2));
+      setT('res_e4', fmt(e4, 2));
+
+      setT('txt_h2_I2', fmt(h2, 1));
+      setT('txt_B2_I2', fmt(B2, 1));
+      setT('txt_b2_I2', fmt(b2, 1));
+      setT('txt_B2_I2_2', fmt(B2, 1));
+      setT('txt_b2_I2_2', fmt(b2, 1));
+      setT('txt_B2_I2_d', fmt(B2, 1));
+      setT('txt_b2_I2_d', fmt(b2, 1));
+      setT('res_I2', fmt(I2, 1));
+
+      setT('txt_I2_Z3', fmt(I2, 1));
+      setT('txt_e3_Z3', fmt(e3, 2));
+      setT('res_Z3', fmt(Z3, 1));
+
+      setT('txt_I2_Z4', fmt(I2, 1));
+      setT('txt_e4_Z4', fmt(e4, 2));
+      setT('res_Z4', fmt(Z4, 1));
+
+      setT('txt_Q_M2', fmt(Q, 0));
+      setT('txt_theta_M2', fmt(thetaDeg, 0));
+      setT('txt_d_M2', fmt(d, 1));
+      setT('txt_e3_M2', fmt(e3, 2));
+      setT('res_M2', fmt(M2, 1));
+
+      setT('txt_M2_bt2', fmt(M2, 1));
+      setT('txt_Z3_bt2', fmt(Z3, 1));
+      setT('txt_Q_bt2', fmt(Q, 0));
+      setT('txt_theta_bt2', fmt(thetaDeg, 0));
+      setT('txt_A2_bt2', fmt(A2, 2));
+      setT('res_sig_bt2', fmt(sig_bt2, 1));
+
+      setT('txt_M2_bc2', fmt(M2, 1));
+      setT('txt_Z4_bc2', fmt(Z4, 1));
+      setT('txt_Q_bc2', fmt(Q, 0));
+      setT('txt_theta_bc2', fmt(thetaDeg, 0));
+      setT('txt_A2_bc2', fmt(A2, 2));
+      setT('res_sig_bc2', fmt(sig_bc2, 1));
+
+      setT('txt_sigmat_sf2', fmt(sigmat, 0));
+      setT('txt_max_sig2', fmt(max_sig2, 1));
+      setT('res_sf2', fmt(sf2, 1));
+
+      // Section II badge
+      const isSf2Ok = sf2 >= sfReq;
+      setH('badge_sf2', isSf2Ok 
+        ? `<span class="badge badge-ok">＞ ${sfReq} →【合格 OK】</span>` 
+        : `<span class="badge badge-ng">＜ ${sfReq} →【不合格 NG】</span>`);
+
+      // Summary Card
+      setT('sum_sf1', `${fmt(sf1, 1)} (${isSf1Ok ? '合格' : '不合格'})`);
+      setT('sum_sf2', `${fmt(sf2, 1)} (${isSf2Ok ? '合格' : '不合格'})`);
+      
+      const hookFinalEl = document.getElementById('sum_final_hook');
+      if (isSf1Ok && isSf2Ok) {
+        hookFinalEl.textContent = '符合安全標準（合格）';
+        hookFinalEl.style.color = 'var(--ok-color)';
+      } else {
+        hookFinalEl.textContent = '未達法定安全係數（不合格）';
+        hookFinalEl.style.color = 'var(--ng-color)';
+      }
+
+      saveData();
+    }
+
+    // -------------------------------------------------------------
+    // WIRE ROPE RECALCULATION ENGINE (Exact Excel formulas)
+    // -------------------------------------------------------------
+    function recalcWire() {
+      const dw = N('wire_d');
+      const Wrated = N('wire_Wrated');
+      const Whook = N('wire_Whook');
+      const Pbreak = N('wire_Pbreak');
+      const n = Math.max(1, N('wire_n'));
+      const Sreq = N('wire_Sreq');
+      const eta = N('wire_eta');
+
+      // 8. 每條鋼索負荷 = (Wrated + Whook) / n
+      const Psingle = (Wrated + Whook) / n;
+      const PsingleRound = Math.round(Psingle); // Excel uses rounded or exact
+
+      // 9. 實際安全係數 S = (Pbreak * eta) / Psingle
+      const S = (Psingle === 0) ? 0 : (Pbreak * eta) / Psingle;
+
+      // Update Step 8
+      setT('txt_wire_Wrated', fmt(Wrated, 0));
+      setT('txt_wire_Whook', fmt(Whook, 0));
+      setT('txt_wire_n', fmt(n, 0));
+      setT('res_wire_Psingle', fmt(PsingleRound, 0));
+
+      // Update Step 9
+      setT('txt_wire_Pbreak', fmt(Pbreak, 0));
+      setT('txt_wire_eta', fmt(eta, 3));
+      setT('txt_wire_Psingle', fmt(PsingleRound, 0));
+      setT('res_wire_S', fmt(S, 3));
+
+      // Wire Safety Factor Badge
+      const isWireOk = S >= Sreq;
+      setH('badge_wire_S', isWireOk 
+        ? `<span class="badge badge-ok" style="font-size:14px;">＞ ${fmt(Sreq,1)} →【合格 OK!】</span>` 
+        : `<span class="badge badge-ng" style="font-size:14px;">＜ ${fmt(Sreq,1)} →【不合格 NG】</span>`);
+
+      // Summary Card
+      setT('sum_wire_spec', `Φ${fmt(dw, 0)} ㎜ × ${fmt(n, 0)} 掛`);
+      setT('sum_wire_load', `${fmtComma(PsingleRound, 0)} ㎏`);
+      setT('sum_wire_sf', `S ＝ ${fmt(S, 3)}`);
+      setT('sum_wire_req', fmt(Sreq, 1));
+
+      const judgeEl = document.getElementById('sum_wire_judge');
+      if (isWireOk) {
+        judgeEl.textContent = '合格 (OK!)';
+        judgeEl.style.color = 'var(--ok-color)';
+      } else {
+        judgeEl.textContent = '不合格 (NG)';
+        judgeEl.style.color = 'var(--ng-color)';
+      }
+
+      saveData();
+    }
+
+    // -------------------------------------------------------------
+    // PRESETS DATABASE
+    // -------------------------------------------------------------
+    const PRESETS = {
+      preset_excel: {
+        hook: { Q: 4950, d: 9.4, B1: 5.3, b1: 1.6, h1: 7.7, B2: 5.2, b2: 1.6, h2: 6.2, mat: 'S45C:7000', sigmat: 7000, theta: 60, sf_req: 3.0 },
+        wire: { d: 20, Wrated: 15000, Whook: 150, Pbreak: 21700, n: 4, Sreq: 5.0, eta: 0.951, type: '6×Fi(29)＋IWRC 鍍鋅鋼索 1770 N/mm²' }
+      },
+      preset_293t: {
+        hook: { Q: 2930, d: 7.5, B1: 4.2, b1: 1.4, h1: 6.0, B2: 4.0, b2: 1.4, h2: 5.0, mat: 'S45C:7000', sigmat: 7000, theta: 60, sf_req: 3.0 },
+        wire: { d: 8, Wrated: 2930, Whook: 30, Pbreak: 4350, n: 2, Sreq: 5.0, eta: 0.97, type: '6×WS(26)＋IWRC 8mm 破斷荷重 4,350 kg' }
+      },
+      preset_293t_4fall: {
+        hook: { Q: 2930, d: 7.5, B1: 4.2, b1: 1.4, h1: 6.0, B2: 4.0, b2: 1.4, h2: 5.0, mat: 'S45C:7000', sigmat: 7000, theta: 60, sf_req: 3.0 },
+        wire: { d: 8, Wrated: 2930, Whook: 45, Pbreak: 4350, n: 4, Sreq: 5.0, eta: 0.951, type: '6×WS(26)＋IWRC 8mm 破斷荷重 4,350 kg' }
+      },
+      preset_platform: {
+        hook: { Q: 580, d: 6.0, B1: 3.5, b1: 1.2, h1: 4.8, B2: 3.2, b2: 1.2, h2: 4.0, mat: 'S45C:7000', sigmat: 7000, theta: 60, sf_req: 3.0 },
+        wire: { d: 8, Wrated: 580, Whook: 25, Pbreak: 4350, n: 2, Sreq: 5.0, eta: 0.97, type: '6×WS(26)＋IWRC 8mm 破斷荷重 4,350 kg (搭乘設備規範)' }
+      }
+    };
+
+    function applyPreset(key) {
+      const p = PRESETS[key];
+      if (!p) return;
+
+      // Hook
+      document.getElementById('hook_Q').value = p.hook.Q;
+      document.getElementById('hook_d').value = p.hook.d;
+      document.getElementById('hook_B1').value = p.hook.B1;
+      document.getElementById('hook_b1').value = p.hook.b1;
+      document.getElementById('hook_h1').value = p.hook.h1;
+      document.getElementById('hook_B2').value = p.hook.B2;
+      document.getElementById('hook_b2').value = p.hook.b2;
+      document.getElementById('hook_h2').value = p.hook.h2;
+      document.getElementById('hook_mat').value = p.hook.mat;
+      document.getElementById('hook_sigmat').value = p.hook.sigmat;
+      document.getElementById('hook_theta').value = p.hook.theta;
+      document.getElementById('hook_sf_req').value = p.hook.sf_req;
+
+      // Wire
+      document.getElementById('wire_d').value = p.wire.d;
+      document.getElementById('wire_Wrated').value = p.wire.Wrated;
+      document.getElementById('wire_Whook').value = p.wire.Whook;
+      document.getElementById('wire_Pbreak').value = p.wire.Pbreak;
+      document.getElementById('wire_n').value = p.wire.n;
+      document.getElementById('wire_Sreq').value = p.wire.Sreq;
+      document.getElementById('wire_eta').value = p.wire.eta;
+      document.getElementById('wire_type').value = p.wire.type;
+
+      recalcHook();
+      recalcWire();
+    }
+
+    function resetForm() {
+      if (confirm("確定要重設所有計算參數至預設值嗎？")) {
+        applyPreset('preset_excel');
+      }
+    }
+
+    // -------------------------------------------------------------
+    // LOCAL STORAGE / CASE STORAGE INTEGRATION
+    // -------------------------------------------------------------
+    const STORAGE_KEY = 'crane3t_rope_hook_calc';
+
+    function saveData() {
+      const data = {
+        applicant: V('applicant'),
+        craneModel: V('craneModel'),
+        plateNo: V('plateNo'),
+        calcDate: V('calcDate'),
+        hook: {
+          Q: N('hook_Q'),
+          d: N('hook_d'),
+          B1: N('hook_B1'),
+          b1: N('hook_b1'),
+          h1: N('hook_h1'),
+          B2: N('hook_B2'),
+          b2: N('hook_b2'),
+          h2: N('hook_h2'),
+          mat: V('hook_mat'),
+          sigmat: N('hook_sigmat'),
+          theta: N('hook_theta'),
+          sf_req: N('hook_sf_req')
+        },
+        wire: {
+          d: N('wire_d'),
+          Wrated: N('wire_Wrated'),
+          Whook: N('wire_Whook'),
+          Pbreak: N('wire_Pbreak'),
+          n: N('wire_n'),
+          Sreq: N('wire_Sreq'),
+          eta: N('wire_eta'),
+          type: V('wire_type')
+        }
+      };
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      } catch (e) {
+        console.warn('LocalStorage save error:', e);
+      }
+    }
+
+    function loadData() {
+      initDate();
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const data = JSON.parse(raw);
+          if (data.applicant) syncFields('applicant', data.applicant);
+          if (data.craneModel) syncFields('craneModel', data.craneModel);
+          if (data.plateNo) syncFields('plateNo', data.plateNo);
+          if (data.calcDate) syncFields('calcDate', data.calcDate);
+
+          if (data.hook) {
+            if (data.hook.Q !== undefined) document.getElementById('hook_Q').value = data.hook.Q;
+            if (data.hook.d !== undefined) document.getElementById('hook_d').value = data.hook.d;
+            if (data.hook.B1 !== undefined) document.getElementById('hook_B1').value = data.hook.B1;
+            if (data.hook.b1 !== undefined) document.getElementById('hook_b1').value = data.hook.b1;
+            if (data.hook.h1 !== undefined) document.getElementById('hook_h1').value = data.hook.h1;
+            if (data.hook.B2 !== undefined) document.getElementById('hook_B2').value = data.hook.B2;
+            if (data.hook.b2 !== undefined) document.getElementById('hook_b2').value = data.hook.b2;
+            if (data.hook.h2 !== undefined) document.getElementById('hook_h2').value = data.hook.h2;
+            if (data.hook.mat !== undefined) document.getElementById('hook_mat').value = data.hook.mat;
+            if (data.hook.sigmat !== undefined) document.getElementById('hook_sigmat').value = data.hook.sigmat;
+            if (data.hook.theta !== undefined) document.getElementById('hook_theta').value = data.hook.theta;
+            if (data.hook.sf_req !== undefined) document.getElementById('hook_sf_req').value = data.hook.sf_req;
+          }
+
+          if (data.wire) {
+            if (data.wire.d !== undefined) document.getElementById('wire_d').value = data.wire.d;
+            if (data.wire.Wrated !== undefined) document.getElementById('wire_Wrated').value = data.wire.Wrated;
+            if (data.wire.Whook !== undefined) document.getElementById('wire_Whook').value = data.wire.Whook;
+            if (data.wire.Pbreak !== undefined) document.getElementById('wire_Pbreak').value = data.wire.Pbreak;
+            if (data.wire.n !== undefined) document.getElementById('wire_n').value = data.wire.n;
+            if (data.wire.Sreq !== undefined) document.getElementById('wire_Sreq').value = data.wire.Sreq;
+            if (data.wire.eta !== undefined) document.getElementById('wire_eta').value = data.wire.eta;
+            if (data.wire.type !== undefined) document.getElementById('wire_type').value = data.wire.type;
+          }
+        }
+      } catch (e) {
+        console.warn('LocalStorage load error:', e);
+      }
+
+      recalcHook();
+      recalcWire();
+    }
+
+    // Auto initialize on load
+    window.addEventListener('DOMContentLoaded', () => {
+      loadData();
+    });
+  </script>
+<script src="case-sync.js"></script>
+</body>
+</html>

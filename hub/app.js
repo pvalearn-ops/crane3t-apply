@@ -467,7 +467,8 @@ function pStep1(pane) {
     <h2>S1　上傳證件與原廠荷重性能表</h2>
     <div class="callout info">本步驟上傳車主現有的資料：營利事業登記證、車主聯，以及原廠荷重性能表（搭乘設備簽證報告請在 S5 上傳）。<br>
       <b>AI 解析為選用功能</b>：擷取的公司、車籍資料會填入 <b>S2</b>（以<span style="background:#fefce8;border:1px solid #facc15;padding:0 4px">黃底</span>標示，請到 S2 逐項核對）；
-      也可以不使用 AI，直接到 S2 人工輸入。行照與其他照片請在 S5 上傳。</div>
+      也可以不使用 AI，直接到 S2 人工輸入。<br>
+      <span style="color:#b45309">⚠ AI 解析使用 Google Gemini，文件內容會上傳至 Gemini 判讀（詳見「責任說明」）；如有顧慮，請勿使用 AI 解析。</span>行照與其他照片請在 S5 上傳。</div>
     <h3>上傳證件（選填，供 AI 解析）</h3>
     <div class="uploads">${['bizReg', 'ownerCert'].map(uploadCard).join('')}</div>
     ${aiBlock('docs')}
@@ -510,6 +511,7 @@ function pStep1(pane) {
     const files = curFiles.filter(f => SLOT_OF[task].some(s => f.slot === s || f.slot.startsWith(s + '#')))
       .map(f => ({ label: SLOTS[f.slot.split('#')[0]].label, dataUrl: f.dataUrl, type: f.type }));
     if (!files.length) { alert(task === 'chart' ? '請先上傳荷重性能表。' : '請先上傳營利事業登記證或車主聯。'); return; }
+    if (!(await confirmAiUse(files))) return;
     const st = $(`[data-ai-status=${task}]`, pane); btn.disabled = true;
     try {
       const res = await AI.extract(task, files, (m) => st.textContent = m);
@@ -626,6 +628,24 @@ function bindBasicCards(pane, rerender) {
       const n = nextK && $(`[data-k="${nextK}"]`, pane); if (n) n.focus();
     }, 0);
   }); });
+}
+
+/* 每次 AI 解析前提醒：資料會上傳至 Google Gemini，需使用者再次確認 */
+function confirmAiUse(files) {
+  return new Promise(res => {
+    const m = $('#aiConfirmModal'), chk = $('#chkAiConfirm'), go = $('#btnAiConfirmGo');
+    $('#aiConfirmFiles').innerHTML = files.map(f => `<li>${esc(f.label)}</li>`).join('');
+    chk.checked = false; go.disabled = true;
+    chk.onchange = () => { go.disabled = !chk.checked; };
+    // 直接由按鈕回傳結果（不依賴 close 事件，避免背景分頁延後觸發）
+    let done = false;
+    const finish = (v) => { if (done) return; done = true; if (m.open) m.close(); res(v); };
+    go.onclick = () => finish(true);
+    $('#btnAiConfirmCancel').onclick = () => finish(false);
+    m.oncancel = (e) => { e.preventDefault(); finish(false); };   // Esc 鍵＝取消
+    m.onclose = () => finish(false);
+    m.showModal();
+  });
 }
 
 /* ---------------- 荷重性能表資料庫：選取已知型號 ---------------- */
@@ -1242,7 +1262,10 @@ function openPhotoEditor(step, after) {
   const m = $('#photoModal');
   $('#photoFrame').src = '照片/annotate.html?case=' + encodeURIComponent(cur.id) + '&step=' + step + '&v=' + SUB_VER;
   $('#photoModalTitle').textContent = '照片尺寸標註（正面照／側面照／伸臂全伸照）';
-  m.onclose = async () => { $('#photoFrame').src = 'about:blank'; await refreshFiles(); after && after(); renderNav(); };
+  let done = false;
+  const finish = async () => { if (done) return; done = true; if (m.open) m.close(); $('#photoFrame').src = 'about:blank'; await refreshFiles(); after && after(); renderNav(); };
+  $('#btnPhotoDone').onclick = finish;
+  m.onclose = finish;
   m.showModal();
 }
 function openPreview(f) {
