@@ -863,20 +863,22 @@ function pStep2(pane) {
   bindBasicCards(pane, rerender);
   bind(pane, (p, v) => {
     if (p.startsWith('platform.')) $('#capView').textContent = capText();
-    if (p === 'boom.weightMode' || p === 'boom.numCyl' || p === 'crane.orig_capacity_t') { if (p === 'boom.weightMode' && v === 'manual') seedManual(); flush(); pStep2(pane); }
+    if (p === 'boom.weightMode') { if (v === 'manual') seedManual(); flush(); rerender(); }
     renderNav();
   });
+  // 文字輸入欄位：輸入完成（離開欄位／Enter）才重繪，避免每打一字就失焦並跳回頁首
+  $$('[data-k="crane.orig_capacity_t"], [data-k="boom.numCyl"]', pane).forEach(el => el.addEventListener('change', () => { flush(); rerender(); }));
   $$('input[data-stab]', pane).forEach(el => {
     el.oninput = () => { cur.stab[el.dataset.stab] = el.value.trim(); el.classList.remove('est-val'); touch(); };
     el.onchange = () => { flush(); const y = window.scrollY; pStep2(pane); window.scrollTo(0, y); renderNav(); };
   });
   $$('[data-reset]', pane).forEach(b => b.onclick = (e) => { e.preventDefault(); cur.stab[b.dataset.reset] = ''; flush(); const y = window.scrollY; pStep2(pane); window.scrollTo(0, y); renderNav(); });
   $$('input[data-st]', pane).forEach(el => el.oninput = () => { cur.boom.stages_m[+el.dataset.st] = el.value; el.classList.toggle('missing', !(N(el.value) > 0)); touch(); });
-  $$('input[data-st]', pane).forEach(el => el.onchange = () => { if (!manual) pStep2(pane); });
+  $$('input[data-st]', pane).forEach(el => el.onchange = () => { if (!manual) rerender(); });
   $$('input[data-sw]', pane).forEach(el => el.oninput = () => { cur.boom.segW[+el.dataset.sw] = el.value; touch(); });
   $$('input[data-cw]', pane).forEach(el => el.oninput = () => { cur.boom.cylW[+el.dataset.cw] = el.value; touch(); });
-  $('#stAdd').onclick = () => { cur.boom.stages_m.push(''); touch(); pStep2(pane); };
-  $('#stDel').onclick = () => { if (cur.boom.stages_m.length > 1) cur.boom.stages_m.pop(); touch(); pStep2(pane); };
+  $('#stAdd').onclick = () => { cur.boom.stages_m.push(''); touch(); rerender(); };
+  $('#stDel').onclick = () => { if (cur.boom.stages_m.length > 1) cur.boom.stages_m.pop(); touch(); rerender(); };
   const fc = $('#btnFromChart');
   if (fc) fc.onclick = () => { if (!cur.origChart.booms.length) return alert('S1 尚未建立原廠荷重性能表。'); cur.boom.stages_m = cur.origChart.booms.slice(); flush(); pStep2(pane); };
 }
